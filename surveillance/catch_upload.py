@@ -1,38 +1,51 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 import commands
+import os, signal, subprocess, time
 import cStringIO
-import time
 import threading
-import subprocess
 import glob
-
 import logging
+
+from six.moves import configparser
+
+import swiftclient
 
 logging.basicConfig(level=logging.DEBUG)
 
 ENDPOINT="http://10.200.44.66:8080/auth/v1.0"
 USERNAME="test:tester"
 USERKEY="testing"
+AUTH_VERSION="1"
 CONTAINER="videos"
 
 UPLOAD_FILE = "*.avi"
-LOCAL_DIR = "/home/pc/catch_video/videos/"
+LOCAL_DIR = "/root/catch_video/videos/"
 SHELL_DIR = '/root/catch_video/catch.sh'
 # DOWNLOAD_AS = "aa"+"2"+".txt"
-UPLOADING_INTERVAL = 5
+UPLOADING_INTERVAL = 6
+VIDEOS2STOP = 3
+THRESHOLD_CONTAINER = 40
 
 def catch_video():
-    stat = commands.getoutput("sh ~/catch_video/catch.sh")
+    stat = commands.getoutput("sh /root/catch_video/catch.sh")
     logging.debug('catch.sh...')
 
 
 def upload(pathname):
-    stat = commands.getoutput("swift -A " + ENDPOINT + " -U "+ USERNAME 
+    stat = commands.getoutput("swift -A " + ENDPOINT + " -U "+ USERNAME
                 + " -K " + USERKEY + " upload " + CONTAINER + " " + pathname)
                 # + ' --object-name ' + filename)
     logging.debug('uploaded video: %s' % stat)
-    print(stat)
+    # print(stat)
+
+
+def swift_upload(swift_conn, pathname):
+    logging.debug('swift_conn uploading video: %s' % pathname)
+    file = open(pathname)
+    swift_conn.put_object(CONTAINER, pathname[-19:], file)
+    # swift_conn.put_object(CONTAINER, pathname, file)
+    logging.debug('swift_conn after uploading video: %s' % pathname)
 
 
 def delete_uploaded(pathname):
@@ -56,11 +69,21 @@ def videos2upload():
     return video_list
 
 
-def keep_uploading():
+def keep_uploading(swift_conn):
     videos = videos2upload()
     for video in videos:
-        upload(video)
+        # upload(video)
+        swift_upload(swift_conn, video)
         delete_uploaded(video)
+
+
+def delete_excessive_objects(threshold):
+    """
+    just for demo
+    get the number of objects in container, if it's beyond threshold, then
+    delete all the container.
+    """
+    logging.debug('objects num before delete: not implemented')
 
 
 def subfunc():
@@ -70,12 +93,37 @@ def subfunc():
     print('threading %s ending...' % threading.current_thread().name)
 
 def main():
-    subprocess.Popen('shell ' + SHELL_DIR, shell=True)
+    conn = swiftclient.Connection(ENDPOINT, USERNAME, USERKEY,
+        auth_version=AUTH_VERSION)
+    # account_head = conn.head_account()
+    # check if container exists, create one if not
+    conn.put_container(CONTAINER)
+    logging.debug('created container...')
+    # child_catch = subprocess.Popen('sh ' + SHELL_DIR, shell=True,
+    #     preexec_fn=os.setsid)
+    child_catch = subprocess.Popen('exec sh ' + SHELL_DIR, shell=True)
+    logging.debug('child_catch pid: %s starting...' % child_catch.pid)
+    cnt = 1
     while True:
         print('start to upload...')
-        keep_uploading()
+        keep_uploading(conn)
+        delete_excessive_objects(THRESHOLD_CONTAINER)
         time.sleep(UPLOADING_INTERVAL)
-    # logging.debug('videos: %s' % videos)
+        cnt += 1
+        logging.debug('########## cnt: %d ' % cnt)
+        if cnt > VIDEOS2STOP + 1:
+            break
+    logging.debug('stop uploading...')
+    # child_catch.terminate()
+    ## cannot use popenobj.kill() to kill child, it will just kill the shell
+    ## need to put exec in Popen before cmd
+    # child_catch.kill()
+    # child_catch.wait()
+    time.sleep(1)
+    child_catch.kill()
+    # os.killpg(child_catch.pid, signal.SIGTERM)
+    logging.debug('child_catch stop...')
+
     # upload(LOCAL_DIR, UPLOAD_FILE)
     # delete_uploaded('mp4')
 
