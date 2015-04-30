@@ -65,11 +65,11 @@ class Config(object):
             self.upload_file = config.get('catchconf', 'upload_file')
             uploading_interval = config.get('catchconf',
                                                  'uploading_interval')
-            videos2stop = config.get('catchconf', 'videos2stop')
+            loopcount = config.get('catchconf', 'loopcount')
             threshold_container = config.get('catchconf',
                                                   'threshold_container')
             self.uploading_interval = int(uploading_interval)
-            self.videos2stop = int(videos2stop)
+            self.loopcount = int(loopcount)
             self.threshold_container = int(threshold_container)
 
 
@@ -185,7 +185,7 @@ def main():
         time.sleep(conf.uploading_interval)
         logging.debug('########## cnt: %d ' % cnt)
         cnt += 1
-        if cnt > conf.videos2stop:
+        if cnt > conf.loopcount:
             break
     logging.debug('stop uploading...')
     # child_catch.terminate()
