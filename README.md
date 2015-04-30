@@ -6,7 +6,9 @@ Contains a shell script to catch video, and a Python program to upload videos to
 
 TODO
 ---------------------------------------------------
-- config file
+- deal with exceptions 
+- use os module to handle system operations
+- ~~config file~~
 - swift functions applying
 - optimize uploading
 - tune ffmpeg to remove error messages
