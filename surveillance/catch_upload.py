@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-# didn't used
-import cStringIO
-import threading
-import glob
-
 from __future__ import absolute_import, division, print_function
 import commands
 import os, signal, subprocess, time
 import logging
+
+# didn't used
+import cStringIO
+import threading
+import glob
 
 from six.moves import configparser
 
@@ -15,10 +15,10 @@ import swiftclient
 
 logging.basicConfig(level=logging.DEBUG)
 
-ENDPOINT="http://10.200.44.66:8080/auth/v1.0"
-USERNAME="test:tester"
-USERKEY="testing"
-AUTH_VERSION="1"
+#ENDPOINT="http://10.200.44.66:8080/auth/v1.0"
+#USERNAME="test:tester"
+#USERKEY="testing"
+#AUTH_VERSION="1"
 CONTAINER="videos"
 
 UPLOAD_FILE = "*.avi"
@@ -34,9 +34,11 @@ def catch_video():
     logging.debug('catch.sh...')
 
 
-def upload(pathname):
-    stat = commands.getoutput("swift -A " + ENDPOINT + " -U "+ USERNAME
-                + " -K " + USERKEY + " upload " + CONTAINER + " " + pathname)
+def upload(pathname, conf):
+    stat = commands.getoutput("swift -A " + conf.auth_url + " -U "+
+                              conf.account_username
+                + " -K " + conf.password + " upload " + conf.container_video +
+                              " " + pathname)
                 # + ' --object-name ' + filename)
     logging.debug('uploaded video: %s' % stat)
     # print(stat)
@@ -98,32 +100,49 @@ def delete_excessive_objects(swift_conn, threshold):
     logging.debug('objects num before delete: not implemented')
 
 
-def _get_config(self):
-    config_file = os.environ.get('SWIFTCLIENT_CONFIG_FILE',
-                                 './etc/swiftclient.conf')
-    config = configparser.SafeConfigParser({'auth_version': '1'})
-    config.read(config_file)
-    if config.has_section('func_test'):
-        auth_host = config.get('func_test', 'auth_host')
-        auth_port = config.getint('func_test', 'auth_port')
-        auth_ssl = config.getboolean('func_test', 'auth_ssl')
-        auth_prefix = config.get('func_test', 'auth_prefix')
-        self.auth_version = config.get('func_test', 'auth_version')
-        self.account = config.get('func_test', 'account')
-        self.username = config.get('func_test', 'username')
-        self.password = config.get('func_test', 'password')
-        self.auth_url = ""
-        if auth_ssl:
-            self.auth_url += "https://"
-        else:
-            self.auth_url += "http://"
-        self.auth_url += "%s:%s%s" % (auth_host, auth_port, auth_prefix)
-        if self.auth_version == "1":
-            self.auth_url += 'v1.0'
-        self.account_username = "%s:%s" % (self.account, self.username)
+class Config(object):
+    def __init__(self):
+        self._get_config()
 
-    else:
-        self.skip_tests = True
+    def _get_config(self):
+        config_file = os.environ.get('SWIFTCLIENT_CONFIG_FILE',
+                                     './swiftclient.conf')
+        config = configparser.SafeConfigParser({'auth_version': '1'})
+        config.read(config_file)
+        if config.has_section('swiftconf'):
+            auth_host = config.get('swiftconf', 'auth_host')
+            auth_port = config.getint('swiftconf', 'auth_port')
+            auth_ssl = config.getboolean('swiftconf', 'auth_ssl')
+            auth_prefix = config.get('swiftconf', 'auth_prefix')
+            self.auth_version = config.get('swiftconf', 'auth_version')
+            self.account = config.get('swiftconf', 'account')
+            self.username = config.get('swiftconf', 'username')
+            self.password = config.get('swiftconf', 'password')
+            self.auth_url = ""
+            if auth_ssl:
+                self.auth_url += "https://"
+            else:
+                self.auth_url += "http://"
+            self.auth_url += "%s:%s%s" % (auth_host, auth_port, auth_prefix)
+            if self.auth_version == "1":
+                self.auth_url += 'v1.0'
+            self.account_username = "%s:%s" % (self.account, self.username)
+
+        else:
+            self.skip_tests = True
+
+        if config.has_section('catchconf'):
+            self.container_video = config.get('catchconf', 'container_video')
+            self.local_dir = config.get('catchconf', 'local_dir')
+            self.shell_dir = config.get('catchconf', 'shell_dir')
+            uploading_interval = config.get('catchconf',
+                                                 'uploading_interval')
+            videos2stop = config.get('catchconf', 'videos2stop')
+            threshold_container = config.get('catchconf',
+                                                  'threshold_container')
+            self.uploading_interval = int(uploading_interval)
+            self.videos2stop = int(videos2stop)
+            self.threshold_container = int(threshold_container)
 
 
 def subfunc():
@@ -134,32 +153,35 @@ def subfunc():
 
 
 def main():
-    conn = swiftclient.Connection(ENDPOINT, USERNAME, USERKEY,
-        auth_version=AUTH_VERSION)
-    # account_head = conn.head_account()
+    conf = Config()
+    conn = swiftclient.Connection(conf.auth_url,
+                                  conf.account_username,
+                                  conf.password,
+                                  auth_version=conf.auth_version)
+    account_head = conn.head_account()
     # check if container exists, create one if not
-    conn.put_container(CONTAINER)
+    conn.put_container(conf.container_video)
     logging.debug('created container...')
     # child_catch = subprocess.Popen('sh ' + SHELL_DIR, shell=True,
     #     preexec_fn=os.setsid)
-    child_catch = subprocess.Popen('exec sh ' + SHELL_DIR, shell=True)
+    child_catch = subprocess.Popen('exec sh ' + conf.shell_dir, shell=True)
     logging.debug('child_catch pid: %s starting...' % child_catch.pid)
 
     # open a new thread to delete, only in dev
-    delete_excessive_objects(conn, THRESHOLD_CONTAINER)
+    delete_excessive_objects(conn, conf.threshold_container)
 
     # open a new thread
     delete_stored(conn)
 
     cnt = 1
-    while True:
+    while 1:
         print('start to upload...')
         keep_uploading(conn)
 
-        time.sleep(UPLOADING_INTERVAL)
+        time.sleep(conf.uploading_interval)
         cnt += 1
         logging.debug('########## cnt: %d ' % cnt)
-        if cnt > VIDEOS2STOP + 1:
+        if cnt > conf.videos2stop + 1:
             break
     logging.debug('stop uploading...')
     # child_catch.terminate()
