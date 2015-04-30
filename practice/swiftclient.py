@@ -7,6 +7,7 @@ import threading
 import subprocess
 import glob
 import logging
+import json
 
 from six.moves import configparser
 
@@ -32,10 +33,22 @@ def main():
     conn = swiftclient.Connection(ENDPOINT, USERNAME, USERKEY,
         auth_version=AUTH_VERSION)
     account_head = conn.head_account()
-    logging.debug('head account')
-    conn.put_container("contest1")
+    #logging.debug('head account: %s' % account_head)
+    try:
+        econtainer_head = conn.head_container('test1')
+        logging.debug('head econtainer: %s' % econtainer_head)
+        print('head container: %s' % json.dumps(econtainer_head, sort_keys=True, indent=4))
+    except:
+        logging.debug('in except')
+        conn.put_container("test1")
+    else:
+        logging.debug('in else')
+    econtainer_head = conn.head_container('videos')
+    logging.debug('head econtainer: %s' % econtainer_head)
+    print('head container: %s' % json.dumps(econtainer_head, sort_keys=True, indent=4))
+    logging.debug('objects count: %s' % econtainer_head['x-container-object-count'])
     obj = b'42' * 10
     fileobj = open(OBJ)
-    conn.put_object("contest1", "objtest1", OBJ)
+   # conn.put_object("contest1", "objtest1", OBJ)
 
 main()

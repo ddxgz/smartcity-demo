@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import commands
 import os, signal, subprocess, time
 import glob
+import json
 import logging
 
 from six.moves import configparser
@@ -157,16 +158,49 @@ def delete_excessive_objects(swift_conn, threshold):
 #     print('threading %s ending...' % threading.current_thread().name)
 
 
+class ThreadExcessiveReaper(threading.Thread):
+    def __init__(self, thread_name, swift_conn, conf):
+        threading.Thread.__init__(self, name=thread_name)
+        self.swift_conn = swift_conn
+        self.threshold = conf.threshold_container
+        self.container = conf.container_video
+
+    def run(self):
+        while 1:
+            try:
+                head_container = self.swift_conn.head_container(
+                    self.container)
+                obj_counts = head_container['x-container-object-count']
+                logging.debug('objects count: %s' % obj_counts)
+            except:
+                logging.debug('exception when head_container in Reaper')
+            else:
+                if obj_counts > self.threshold:
+                    logging.debug('obj over threshold, try to delete')
+                    try:
+                        self.swift_conn.delete_container(self.container)
+                    except:
+                        logging.debug('container delete fail')
+                    else:
+                        logging.debug('container delete success')
+
+
+
 def main():
     conf = Config()
     conn = swiftclient.Connection(conf.auth_url,
                                   conf.account_username,
                                   conf.password,
                                   auth_version=conf.auth_version)
-    account_head = conn.head_account()
+    #account_head = conn.head_account()
     # check if container exists, create one if not
-    conn.put_container(conf.container_video)
-    logging.debug('created container...')
+    try:
+        head_container = conn.head_container(conf.container_video)
+    except:
+        logging.debug('container not exists or swift connection fail...')
+        conn.put_container(conf.container_video)
+        logging.debug('created container...')
+
     # child_catch = subprocess.Popen('sh ' + SHELL_DIR, shell=True,
     #     preexec_fn=os.setsid)
     child_catch = subprocess.Popen('exec sh ' + conf.shell_dir, shell=True)
