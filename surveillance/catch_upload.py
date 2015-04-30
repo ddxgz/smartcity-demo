@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function
-import commands
-import os, signal, subprocess, time
+# didn't used
 import cStringIO
 import threading
 import glob
+
+from __future__ import absolute_import, division, print_function
+import commands
+import os, signal, subprocess, time
 import logging
 
 from six.moves import configparser
@@ -91,6 +93,7 @@ def subfunc():
     # datain = raw_input('pleas input: ')
 
     print('threading %s ending...' % threading.current_thread().name)
+
 
 def main():
     conn = swiftclient.Connection(ENDPOINT, USERNAME, USERKEY,
