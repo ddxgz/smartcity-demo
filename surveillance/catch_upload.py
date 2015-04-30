@@ -52,6 +52,7 @@ def swift_upload(swift_conn, pathname):
 
 def delete_uploaded(pathname):
     # stat = commands.getoutput("rm " + LOCAL_DIR + "*." + suffix)
+    # instead of os.remove()
     stat = commands.getoutput("rm " + pathname)
     logging.debug('deleted video: %s' % pathname)
     print(stat)
@@ -79,13 +80,50 @@ def keep_uploading(swift_conn):
         delete_uploaded(video)
 
 
-def delete_excessive_objects(threshold):
+def delete_stored(swift_conn):
+    """
+    get objects stored in swift,
+    find out videos in local to delete.
+    """
+    logging.debug('delete objects have stored in swift: not implemented')
+    # delete what in keep_uploading()
+
+
+def delete_excessive_objects(swift_conn, threshold):
     """
     just for demo
     get the number of objects in container, if it's beyond threshold, then
-    delete all the container.
+    delete the whole container, and create a new one.
     """
     logging.debug('objects num before delete: not implemented')
+
+
+def _get_config(self):
+    config_file = os.environ.get('SWIFTCLIENT_CONFIG_FILE',
+                                 './etc/swiftclient.conf')
+    config = configparser.SafeConfigParser({'auth_version': '1'})
+    config.read(config_file)
+    if config.has_section('func_test'):
+        auth_host = config.get('func_test', 'auth_host')
+        auth_port = config.getint('func_test', 'auth_port')
+        auth_ssl = config.getboolean('func_test', 'auth_ssl')
+        auth_prefix = config.get('func_test', 'auth_prefix')
+        self.auth_version = config.get('func_test', 'auth_version')
+        self.account = config.get('func_test', 'account')
+        self.username = config.get('func_test', 'username')
+        self.password = config.get('func_test', 'password')
+        self.auth_url = ""
+        if auth_ssl:
+            self.auth_url += "https://"
+        else:
+            self.auth_url += "http://"
+        self.auth_url += "%s:%s%s" % (auth_host, auth_port, auth_prefix)
+        if self.auth_version == "1":
+            self.auth_url += 'v1.0'
+        self.account_username = "%s:%s" % (self.account, self.username)
+
+    else:
+        self.skip_tests = True
 
 
 def subfunc():
@@ -106,11 +144,18 @@ def main():
     #     preexec_fn=os.setsid)
     child_catch = subprocess.Popen('exec sh ' + SHELL_DIR, shell=True)
     logging.debug('child_catch pid: %s starting...' % child_catch.pid)
+
+    # open a new thread to delete, only in dev
+    delete_excessive_objects(conn, THRESHOLD_CONTAINER)
+
+    # open a new thread
+    delete_stored(conn)
+
     cnt = 1
     while True:
         print('start to upload...')
         keep_uploading(conn)
-        delete_excessive_objects(THRESHOLD_CONTAINER)
+
         time.sleep(UPLOADING_INTERVAL)
         cnt += 1
         logging.debug('########## cnt: %d ' % cnt)
