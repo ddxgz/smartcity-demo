@@ -5,13 +5,14 @@ import os, signal, subprocess, time
 import glob
 import json
 import logging
+import functools
+import threading
 
 from six.moves import configparser
 
 import swiftclient
 
 # didn't used
-import threading
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -30,12 +31,33 @@ logging.basicConfig(level=logging.DEBUG)
 # THRESHOLD_CONTAINER = 40
 
 
-class Config(object):
-    def __init__(self):
-        self._get_config()
+def logger(text):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            logging.info('%s start func[%s]' % (text, func.__name__))
+            start = time.time()
+            func(*args, **kwargs)
+            interval = time.time() - start
+            logging.info('%s end func[%s], running: %0.5f seconds' % (text,
+                func.__name__, interval))
+        return wrapper
+    return decorator
 
-    def _get_config(self):
-        config_file = os.environ.get('SWIFTCLIENT_CONFIG_FILE',
+
+class Config(object):
+    def __init__(self, conf_file=None):
+        if conf_file:
+            self.config_file = conf_file
+            self._get_config(specified=True)
+        else:
+            self._get_config()
+
+    def _get_config(self, specified=False):
+        if specified is True:
+            config_file = self.config_file
+        else:
+            config_file = os.environ.get('SWIFTCLIENT_CONFIG_FILE',
                                      './swiftclient.conf')
         config = configparser.SafeConfigParser({'auth_version': '1'})
         config.read(config_file)
@@ -72,7 +94,24 @@ class Config(object):
             self.uploading_interval = int(uploading_interval)
             self.loopcount = int(loopcount)
             self.threshold_container = int(threshold_container)
+        if config.has_section('devsetting'):
+            no_catch = config.get('devsetting', 'no_catch')
+            if no_catch is '0':
+                self.no_catch = 0
+            else:
+                self.no_catch = 1
+            auto_rename = config.get('devsetting', 'auto_rename')
+            if auto_rename is '0':
+                self.auto_rename = 0
+            else:
+                self.auto_rename = 1
 
+
+@logger('--------auto_rename---------')
+def rename(pathname):
+    newname = pathname[:len(pathname)-14] + str(time.time())[0:10] + pathname[-4:]
+    logging.info('rename to newname: %s' % newname)
+    os.rename(pathname, newname)
 
 ## not used
 # def catch_video():
@@ -89,9 +128,16 @@ class Config(object):
 #     logging.debug('uploaded video: %s' % stat)
 #     # print(stat)
 
-
+@logger('-------swift_upload-------')
 def swift_upload(swift_conn, conf):
     videos = videos2upload(conf)
+    logging.info('111 videos: %s ' % videos)
+    if not videos or len(videos) is 0:
+        logging.info('no video can be uploaded, wait: %s seconds' % 
+            conf.uploading_interval)
+        time.sleep(conf.uploading_interval)
+        videos = videos2upload(conf)
+    logging.info('videos: %s ' % videos)
     for video in videos:
         # upload(video)
         # swift_upload(swift_conn, video)
@@ -100,7 +146,11 @@ def swift_upload(swift_conn, conf):
         swift_conn.put_object(conf.container_video, video[-19:], file)
         # swift_conn.put_object(CONTAINER, pathname, file)
         logging.debug('swift_conn after uploading video: %s' % video)
-        delete_uploaded(video)
+        if conf.auto_rename:
+            time.sleep(1)
+            rename(video)
+        else:
+            delete_uploaded(video)
 
 
 # def swift_upload(swift_conn, pathname):
@@ -111,6 +161,7 @@ def swift_upload(swift_conn, conf):
 #     logging.debug('swift_conn after uploading video: %s' % pathname)
 
 
+@logger('--------delete_uploaded---------')
 def delete_uploaded(pathname):
     # stat = commands.getoutput("rm " + LOCAL_DIR + "*." + suffix)
     # instead of os.remove()
@@ -119,6 +170,7 @@ def delete_uploaded(pathname):
     print(stat)
 
 
+# @logger('--------videos2upload---------')
 def videos2upload(conf):
     """
     get all the videos in the path, remove the latest one from list
@@ -173,7 +225,9 @@ class ThreadExcessiveReaper(threading.Thread):
                 obj_counts = head_container['x-container-object-count']
                 logging.debug('objects count: %s' % obj_counts)
             except:
-                logging.debug('exception when head_container in Reaper')
+                logging.debug('exception when head_container in \
+                              ExcessiveReaper')
+                break
             else:
                 if obj_counts > self.threshold:
                     logging.debug('obj over threshold, try to delete')
@@ -203,8 +257,13 @@ def main():
 
     # child_catch = subprocess.Popen('sh ' + SHELL_DIR, shell=True,
     #     preexec_fn=os.setsid)
-    child_catch = subprocess.Popen('exec sh ' + conf.shell_dir, shell=True)
-    logging.debug('child_catch pid: %s starting...' % child_catch.pid)
+    if conf.no_catch:
+        pass
+        # if conf.auto_rename:
+        #     auto_rename()
+    else:
+        child_catch = subprocess.Popen('exec sh ' + conf.shell_dir, shell=True)
+        logging.debug('child_catch pid: %s starting...' % child_catch.pid)
 
     # open a new thread to delete, only in dev
     delete_excessive_objects(conn, conf.threshold_container)
@@ -227,8 +286,11 @@ def main():
     ## need to put exec in Popen before cmd
     # child_catch.kill()
     # child_catch.wait()
-    time.sleep(1)
-    child_catch.kill()
+    if conf.no_catch:
+        pass
+    else:
+        time.sleep(1)
+        child_catch.kill()
     # os.killpg(child_catch.pid, signal.SIGTERM)
     logging.debug('child_catch killed...')
 
