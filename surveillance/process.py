@@ -240,7 +240,7 @@ class ThreadExcessiveReaper(threading.Thread):
 
 
 
-def main():
+def process():
     conf = Config()
     conn = swiftclient.Connection(conf.auth_url,
                                   conf.account_username,
@@ -300,5 +300,18 @@ def main():
     # delete_uploaded('mp4')
 
 
+class Processor(threading.Thread):
+    def __init__(self, thread_name, queue):
+        threading.Thread.__init__(self, name=thread_name)
+        self.queue = queue
+
+    def run(self):
+        logging.info('start to run process...')
+        while 1:
+            logging.info('queue size: %s' % self.queue.qsize())
+            time.sleep(3)
+        # process()
+
 if __name__ == '__main__':
-    main()
+    #process()
+    pass

@@ -7,7 +7,7 @@ import random
 import logging
 
 import swiftclient
-from surveillance.catch_upload import ThreadExcessiveReaper, Config
+from surveillance.process import ThreadExcessiveReaper, Config
 
 logging.basicConfig(level=logging.DEBUG)
 

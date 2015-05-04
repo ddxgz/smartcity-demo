@@ -1,8 +1,19 @@
+from __future__ import absolute_import, division, print_function
 import falcon
 import json
+import Queue
+import sys
 
+from process import Processor
+
+#sys.path.append('.')
 
 class ThingsRe:
+    def __init__(self):
+        self.queue = Queue.Queue()
+        self.processor = Processor('catch_upload processor', self.queue)
+        self.processor.start()
+
     def on_get(self, req, resp):
         resp.status = falcon.HTTP_200
         resp.body = ('\nTwo things awe me most, the starry sky '
@@ -19,6 +30,8 @@ class ThingsRe:
         try:
             result_json = json.loads(raw_json, encoding='utf-8')
             print('result json:%s' % result_json)
+            print('start to run process....')
+            self.queue.put(result_json)
         except:
             raise falcon.HTTPError(falcon.HTTP_400, 'malformed json')
         resp.status = falcon.HTTP_202
