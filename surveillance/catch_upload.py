@@ -250,6 +250,8 @@ def main():
     # check if container exists, create one if not
     try:
         head_container = conn.head_container(conf.container_video)
+        logging.info('head container: %s' % json.dumps(head_container, 
+            sort_keys=True, indent=4))
     except:
         logging.debug('container not exists or swift connection fail...')
         conn.put_container(conf.container_video)

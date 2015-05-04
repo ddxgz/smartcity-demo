@@ -6,6 +6,7 @@ Contains a shell script to catch video, and a Python program to upload videos to
 
 TODO
 ---------------------------------------------------
+- provide REST API (by Django first, change to Falcon later) 
 - deal with exceptions 
 - use os module to handle system operations
 - ~~config file~~
@@ -20,3 +21,7 @@ Requirements
 ---------------------------------------------------
 Python >= 2.7
 Six >= 1.9
+PyPy
+Falcon >= 0.2 
+gevent >= 1.0.1
+uWSGI >= 2.0.10
