@@ -11,8 +11,9 @@ import threading
 from six.moves import configparser
 
 import swiftclient
-import videoedit
-from utils import funclogger, time2Stamp, stamp2Time
+
+# didn't used
+
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -28,6 +29,20 @@ logging.basicConfig(level=logging.DEBUG)
 # UPLOADING_INTERVAL = 6
 # VIDEOS2STOP = 3
 # THRESHOLD_CONTAINER = 40
+
+
+def logger(text):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            logging.info('%s start func[%s]' % (text, func.__name__))
+            start = time.time()
+            func(*args, **kwargs)
+            interval = time.time() - start
+            logging.info('%s end func[%s], running: %0.5f seconds' % (text,
+                func.__name__, interval))
+        return wrapper
+    return decorator
 
 
 class Config(object):
@@ -68,7 +83,7 @@ class Config(object):
             self.skip_tests = True
         if config.has_section('catchconf'):
             self.container_video = config.get('catchconf', 'container_video')
-            self.video_dir = config.get('catchconf', 'video_dir')
+            self.local_dir = config.get('catchconf', 'local_dir')
             self.shell_dir = config.get('catchconf', 'shell_dir')
             self.upload_file = config.get('catchconf', 'upload_file')
             uploading_interval = config.get('catchconf',
@@ -79,7 +94,6 @@ class Config(object):
             self.uploading_interval = int(uploading_interval)
             self.loopcount = int(loopcount)
             self.threshold_container = int(threshold_container)
-            self.upload_dir = config.get('catchconf', 'upload_dir')
         if config.has_section('devsetting'):
             no_catch = config.get('devsetting', 'no_catch')
             if no_catch is '0':
@@ -93,7 +107,7 @@ class Config(object):
                 self.auto_rename = 1
 
 
-@funclogger('--------auto_rename---------')
+@logger('--------auto_rename---------')
 def rename(pathname):
     newname = pathname[:len(pathname)-14] + str(time.time())[0:10] + pathname[-4:]
     logging.info('rename to newname: %s' % newname)
@@ -114,7 +128,7 @@ def rename(pathname):
 #     logging.debug('uploaded video: %s' % stat)
 #     # print(stat)
 
-@funclogger('-------swift_upload-------')
+@logger('-------swift_upload-------')
 def swift_upload(swift_conn, conf):
     videos = videos2upload(conf)
     logging.info('111 videos: %s ' % videos)
@@ -139,7 +153,15 @@ def swift_upload(swift_conn, conf):
             delete_uploaded(video)
 
 
-@funclogger('--------delete_uploaded---------')
+# def swift_upload(swift_conn, pathname):
+#     logging.debug('swift_conn uploading video: %s' % pathname)
+#     file = open(pathname)
+#     swift_conn.put_object(CONTAINER, pathname[-19:], file)
+#     # swift_conn.put_object(CONTAINER, pathname, file)
+#     logging.debug('swift_conn after uploading video: %s' % pathname)
+
+
+@logger('--------delete_uploaded---------')
 def delete_uploaded(pathname):
     # stat = commands.getoutput("rm " + LOCAL_DIR + "*." + suffix)
     # instead of os.remove()
@@ -148,13 +170,13 @@ def delete_uploaded(pathname):
     print(stat)
 
 
-# @funclogger('--------videos2upload---------')
+# @logger('--------videos2upload---------')
 def videos2upload(conf):
     """
     get all the videos in the path, remove the latest one from list
     """
-    logging.debug('dir: %s' % conf.video_dir + conf.upload_file)
-    video_list = glob.glob(conf.video_dir + conf.upload_file)
+    logging.debug('dir: %s' % conf.local_dir + conf.upload_file)
+    video_list = glob.glob(conf.local_dir + conf.upload_file)
     logging.debug('before sort: %s' % video_list)
     video_list.sort()
     logging.debug('after sort: %s, len: %d' % (video_list, len(video_list)))
@@ -276,75 +298,6 @@ def main():
 
     # upload(LOCAL_DIR, UPLOAD_FILE)
     # delete_uploaded('mp4')
-
-
-@funclogger('--------process---------')
-def process(start_time, stop_time=None, duration=5):
-    """
-    cut the video based on the time parameters via ffmpeg,
-    then upload the video to swift
-
-    :start_time
-    :stop_time
-    :duration, if the stop_time is None, then cut the video for 5 seconds 
-    by default
-    """
-    conf = Config()
-    video_editted = videoedit.editting(start_time, stop_time, 
-                                                            conf.video_dir, conf.upload_dir)
-
-    if conf.no_catch:
-        pass
-    else:
-        pass
-        # cut the video via ffmpeg by shell scripts
-        # child_catch = subprocess.Popen('exec sh ' + conf.shell_dir, shell=True)
-        # logging.debug('child_catch pid: %s starting...' % child_catch.pid)
-
-    conn = swiftclient.Connection(conf.auth_url,
-                                  conf.account_username,
-                                  conf.password,
-                                  auth_version=conf.auth_version)
-    # check if container exists, create one if not
-    try:
-        head_container = conn.head_container(conf.container_video)
-        logging.info('head container: %s' % json.dumps(head_container, 
-            sort_keys=True, indent=4))
-    except:
-        logging.debug('container not exists or swift connection fail...')
-        conn.put_container(conf.container_video)
-        logging.debug('created container...')
-
-    try:
-        logging.info('start to upload...')
-        # swift_upload(conn, conf)
-    except:
-        logging.debug('upload object failed, something is wrong, i can feel \
-            it...')
-    else:
-        logging.debug('finish uploading, to delete or rename the uploaded \
-            video...')
-        if conf.auto_rename:
-            time.sleep(1)
-            rename(video)
-        else:
-            delete_uploaded(video)
-
-
-class Processor(threading.Thread):
-    def __init__(self, thread_name, queue):
-        threading.Thread.__init__(self, name=thread_name)
-        self.queue = queue
-
-    def run(self):
-        logging.info('start to run process...')
-        while 1:
-            logging.info('queue size: %s' % self.queue.qsize())
-            item = self.queue.get()
-            logging.info('queue item: %s' % item)
-            time.sleep(2)
-            # process()
-            self.queue.task_done()            
 
 
 if __name__ == '__main__':

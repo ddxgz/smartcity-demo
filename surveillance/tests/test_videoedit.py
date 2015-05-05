@@ -7,21 +7,20 @@ import random
 import logging
 
 import swiftclient
-from process import ThreadExcessiveReaper, Config
+from videoedit import videos_in_duration
 
 logging.basicConfig(level=logging.DEBUG)
 
 class CatchuploadTestCase(unittest.TestCase):
     def setUp(self):
         conf = Config('./test_settings.conf')
-        conn = swiftclient.Connection(conf.auth_url,
-                                  conf.account_username,
-                                  conf.password,
-                                  auth_version=conf.auth_version)
         logging.info('conf: %s' % conf)
         # reaper = ThreadExcessiveReaper('reapertest', conn, conf)
     def tearDown(self):
         pass
+
+    def test_videos_in_duration(self):
+      pass
 
 
 if __name__ == '__main__':
