@@ -6,7 +6,7 @@ Contains a shell script to catch video, and a Python program to upload videos to
 
 TODO
 ---------------------------------------------------
-- provide REST API (by Django first, change to Falcon later) 
+- provide REST API ( Falcon ) 
 - deal with exceptions 
 - use os module to handle system operations
 - ~~config file~~
@@ -17,7 +17,7 @@ TODO
 - add doc by Sphinx
 
 
-Requirements
+Requirements ( the env when dev )
 ---------------------------------------------------
 Python >= 2.7
 Six >= 1.9

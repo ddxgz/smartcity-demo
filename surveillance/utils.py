@@ -11,10 +11,11 @@ def funclogger(text):
         def wrapper(*args, **kwargs):
             logging.info('%s start func[%s]' % (text, func.__name__))
             start = time.time()
-            func(*args, **kwargs)
+            result = func(*args, **kwargs)
             interval = time.time() - start
             logging.info('%s end func[%s], running: %0.5f seconds' % (text,
                 func.__name__, interval))
+            return result
         return wrapper
     return decorator
 

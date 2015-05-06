@@ -217,65 +217,15 @@ class ThreadExcessiveReaper(threading.Thread):
                         logging.debug('container delete success')
 
 
+class ThreadStoredReaper(threading.Thread):
+    def __init__(self, thread_name, swift_conn, conf):
+        threading.Thread.__init__(self, name=thread_name)
+        self.swift_conn = swift_conn
+        self.threshold = conf.threshold_container
+        self.container = conf.container_video
 
-def main():
-    conf = Config()
-    conn = swiftclient.Connection(conf.auth_url,
-                                  conf.account_username,
-                                  conf.password,
-                                  auth_version=conf.auth_version)
-    #account_head = conn.head_account()
-    # check if container exists, create one if not
-    try:
-        head_container = conn.head_container(conf.container_video)
-        logging.info('head container: %s' % json.dumps(head_container, 
-            sort_keys=True, indent=4))
-    except:
-        logging.debug('container not exists or swift connection fail...')
-        conn.put_container(conf.container_video)
-        logging.debug('created container...')
-
-    # child_catch = subprocess.Popen('sh ' + SHELL_DIR, shell=True,
-    #     preexec_fn=os.setsid)
-    if conf.no_catch:
+    def run(self):
         pass
-        # if conf.auto_rename:
-        #     auto_rename()
-    else:
-        child_catch = subprocess.Popen('exec sh ' + conf.shell_dir, shell=True)
-        logging.debug('child_catch pid: %s starting...' % child_catch.pid)
-
-    # open a new thread to delete, only in dev
-    delete_excessive_objects(conn, conf.threshold_container)
-
-    # open a new thread
-    delete_stored(conn)
-
-    cnt = 1
-    while 1:
-        print('start to upload...')
-        swift_upload(conn, conf)
-        time.sleep(conf.uploading_interval)
-        logging.debug('########## cnt: %d ' % cnt)
-        cnt += 1
-        if cnt > conf.loopcount:
-            break
-    logging.debug('stop uploading...')
-    # child_catch.terminate()
-    ## cannot use popenobj.kill() to kill child, it will just kill the shell
-    ## need to put exec in Popen before cmd
-    # child_catch.kill()
-    # child_catch.wait()
-    if conf.no_catch:
-        pass
-    else:
-        time.sleep(1)
-        child_catch.kill()
-    # os.killpg(child_catch.pid, signal.SIGTERM)
-    logging.debug('child_catch killed...')
-
-    # upload(LOCAL_DIR, UPLOAD_FILE)
-    # delete_uploaded('mp4')
 
 
 @funclogger('--------process---------')
@@ -318,17 +268,23 @@ def process(start_time, stop_time=None, duration=5):
     try:
         logging.info('start to upload...')
         # swift_upload(conn, conf)
+        logging.debug('conn uploading video: %s' % video_editted)
+        file = open(video_editted)
+        conn.put_object(conf.container_video, video_editted[-25:], file)
+        # swift_conn.put_object(CONTAINER, pathname, file)
+        logging.debug('conn after uploading video: %s' % video_editted)
     except:
         logging.debug('upload object failed, something is wrong, i can feel \
             it...')
     else:
         logging.debug('finish uploading, to delete or rename the uploaded \
             video...')
-        if conf.auto_rename:
-            time.sleep(1)
-            rename(video)
-        else:
-            delete_uploaded(video)
+        # if conf.auto_rename:
+            # time.sleep(1)
+            # rename(video)
+        # else:
+            # time.sleep(1)
+            # delete_stored(video_editted)
 
 
 class Processor(threading.Thread):
@@ -342,8 +298,16 @@ class Processor(threading.Thread):
             logging.info('queue size: %s' % self.queue.qsize())
             item = self.queue.get()
             logging.info('queue item: %s' % item)
-            time.sleep(2)
-            # process()
+            start_time = item.get('vtime_start')
+            end_time = item.get('vtime_end')
+            if  start_time and end_time:
+                logging.debug('start:%s, end:%s' % (start_time, end_time))
+                time.sleep(2)
+                logging.debug('after process, start:%s, end:%s' % (int(str(start_time)[:10]),
+                    int(str(end_time)[:10])))                
+                process(int(str(start_time)[:10]), int(str(end_time)[:10]))
+            else:
+                logging.info('received start time or end time error!')
             self.queue.task_done()            
 
 

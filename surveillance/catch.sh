@@ -12,7 +12,7 @@ while [ 1 ]; do
 # ffmpeg  -i $url -vcodec libx264  -timelimit 10 ./videos/out.mp4
 # the command below is the one used 
      # ffmpeg  -t 00:00:05 -rtsp_transport tcp -i $url -codec copy /root/catch_video/videos/DEMO_$timestamp.avi
-     ffmpeg  -t 00:10:00 -rtsp_transport tcp -i $url -codec copy /root/catch_video/videos/DEMO_$timestamp.avi
+     ffmpeg  -t 00:00:10 -rtsp_transport tcp -i $url -codec copy /root/catch_video/videos/DEMO_$timestamp.avi
      # ffmpeg  -timelimit 5 -i $url -codec copy ./videos/DEMO_$timestamp.mp4
 done
 
