@@ -21,7 +21,7 @@ Requirements ( the env when dev )
 ---------------------------------------------------
 Python >= 2.7
 Six >= 1.9
-PyPy
 Falcon >= 0.2 
 gevent >= 1.0.1
-uWSGI >= 2.0.10
+uWSGI >= 19.3.0
+PyPy recommanded
