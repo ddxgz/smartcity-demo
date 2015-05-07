@@ -37,16 +37,16 @@ def videos_in_duration(start_time, end_time, source_folder, reverse=False):
     """
     :start_time, timestamp
     :end_time, timestamp
-    :source_folder, string 
+    :source_folder, string
 
     return:
     video_list, suffix
     """
-    logging.debug('start time:%s, endtime: %s, source folder:%s' % (start_time, end_time, 
+    logging.debug('start time:%s, endtime: %s, source folder:%s' % (start_time, end_time,
         source_folder))
     files = os.listdir(source_folder)
     logging.debug('files in source folder:%s' % files)
-    videos = get_file_with_prefix(files, frefix='DEMO_')
+    videos = get_file_with_prefix(files, frefix='demo_')
     suffix = videos[0][-4:]
     stamps = []
     video_stamps = {}
@@ -59,7 +59,7 @@ def videos_in_duration(start_time, end_time, source_folder, reverse=False):
         video_stamps[str(stamp)] = video
         # logging.debug('stamps:%s' % stamps)
         # logging.debug('video_stamps:%s' % video_stamps)
-    stamps.sort(reverse=True)
+    stamps.sort(reverse=true)
     logging.debug('stamps:%s' % stamps)
     for stamp in stamps:
         if stamp <= end_time:
@@ -69,9 +69,11 @@ def videos_in_duration(start_time, end_time, source_folder, reverse=False):
             videos_in_duration.append(video_stamps.get(str(stamp)))
             continue
     logging.debug('videos_in_duration:%s' % videos_in_duration)
-    videos_path_in_duration = []
-    for video in videos_in_duration:
-        videos_path_in_duration.append(source_folder + video)
+    videos_path_in_duration = \
+            [(source_folder + video) for video in videos_in_duration]
+#    videos_path_in_duration = []
+#    for video in videos_in_duration:
+#        videos_path_in_duration.append(source_folder + video)
     videos_path_in_duration.sort(reverse=reverse)
     logging.debug('videos_path_in_duration:%s' % videos_path_in_duration)
     return videos_path_in_duration, suffix
@@ -89,11 +91,11 @@ def get_file_with_prefix(files, frefix='DEMO_'):
 def combine_videos(videos, source_folder, videoname, suffix):
     logging.debug('in combine_videos:%s' % videos)
     new_folder = source_folder + 'concats/'
-    # need a list file of video path and names, used for combining videos by ffmpeg  
+    # need a list file of video path and names, used for combining videos by ffmpeg
     video_list_file = write_ffmpeg_concat_file(videos, new_folder, videoname)
     logging.debug('in combine_videos, video_list_file:%s' % video_list_file)
     # call ffmpeg to combine videos
-    stat = commands.getoutput("ffmpeg -f concat -i " + video_list_file +  
+    stat = commands.getoutput("ffmpeg -f concat -i " + video_list_file +
         " -y " + " -c copy " +  new_folder + videoname + '-notfixed' + suffix)
     logging.debug('in combine_videos, stat:%s' % stat)
     return new_folder + videoname + '-notfixed' + suffix
@@ -123,7 +125,7 @@ def cut_video(full_video, source_folder, head_shift_time, duration_time):
     # stat = commands.getoutput("ffmpeg -i " + first_video + " -ss " + shift_time + " -to " #+ in
     #     + " -acodec copy -vcodec copy " + LIST_FOLDER + "/" + new_folder + "/" + cut_video)
     stat = commands.getoutput("ffmpeg -i " + full_video + " -y " +
-        " -ss " + str(head_shift_time) + ' -t ' + str(duration_time)  + 
+        " -ss " + str(head_shift_time) + ' -t ' + str(duration_time)  +
         " -acodec copy -vcodec copy " + cut_video)
     logging.debug('in cut_video, stat:%s' % stat)
     return cut_video
