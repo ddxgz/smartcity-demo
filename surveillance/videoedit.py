@@ -18,7 +18,7 @@ def editting(start_time, end_time, source_folder, output_folder):
     # time2 = int(time2)
     # logging.debug("start time: %s, time1: %s", start_time, time1)
     # logging.debug("end time:  %s, time2: %s", end_time, time2)
-    # video_list is in order
+    # video_list is in order, need to check if ealiest and latest video suitable
     video_list, suffix = videos_in_duration(start_time, end_time, source_folder)
     logging.debug('video_list:%s, suffix: %s' % (video_list, suffix))
     # combine videos into one

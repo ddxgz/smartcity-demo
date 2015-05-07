@@ -11,8 +11,6 @@ from utils import funclogger, time2Stamp, stamp2Time
 
 logging.basicConfig(level=logging.DEBUG)
 
-PIDS = []
-
 
 def signal_exit_handler(signal, frame):
     print('You pressed Ctrl+C, start to stop all the processes...')
@@ -25,16 +23,16 @@ def startall():
     # child_catch = subprocess.Popen('sh ' + SHELL_DIR, shell=True,
     #     preexec_fn=os.setsid)
     conf = Config()
-
+    pids = []
     child_catch = subprocess.Popen('exec sh ' + conf.shell_dir, shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid)
-    PIDS.append(child_catch.pid)
+    pids.append(child_catch.pid)
     logging.debug('child_catch pid: %s starting...' % child_catch.pid)
     child_gunicorn = subprocess.Popen(['gunicorn', '-b', '0.0.0.0:8008', 'restapi:app'], stdout=subprocess.PIPE, preexec_fn=os.setsid)
-    PIDS.append(child_gunicorn.pid)
+    pids.append(child_gunicorn.pid)
     logging.debug('child_gunicorn pid: %s starting...' % child_gunicorn.pid)
 
     pidfile = open('./pids', 'w')
-    for pid in PIDS:
+    for pid in pids:
         pidfile.write(str(pid) + '\n')
     # child_gunicorn = subprocess.Popen('exec gunicorn -b 0.0.0.0:8008 restapi:app')
     # logging.debug('child_gunicorn pid: %s starting...' % child_gunicorn.pid)

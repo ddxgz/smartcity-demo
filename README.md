@@ -6,9 +6,9 @@ Contains a shell script to catch video, and a Python program to upload videos to
 
 TODO
 ---------------------------------------------------
-- provide REST API ( Falcon ) 
+- ~~provide REST API ( Falcon ) ~~
 - deal with exceptions 
-- use os module to handle system operations
+- ~~use os module to handle system operations~~
 - ~~config file~~
 - swift functions applying
 - optimize uploading
@@ -23,5 +23,5 @@ Python >= 2.7
 Six >= 1.9
 Falcon >= 0.2 
 gevent >= 1.0.1
-uWSGI >= 19.3.0
+gunicorn >= 19.3.0
 PyPy recommanded

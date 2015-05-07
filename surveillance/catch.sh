@@ -8,7 +8,7 @@ now()
 touch /tmp/catchtime
 
 while [ 1 ]; do
-     timestamp=`date +"%s"`
+     timestamp=`date +"%s.%5N"`
 # ffmpeg  -i $url -vcodec libx264  -timelimit 10 ./videos/out.mp4
 # the command below is the one used 
      # ffmpeg  -t 00:00:05 -rtsp_transport tcp -i $url -codec copy /root/catch_video/videos/DEMO_$timestamp.avi

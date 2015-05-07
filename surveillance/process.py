@@ -80,6 +80,10 @@ class Config(object):
             self.loopcount = int(loopcount)
             self.threshold_container = int(threshold_container)
             self.upload_dir = config.get('catchconf', 'upload_dir')
+            wait_for_video_sec = config.get('catchconf',
+                                                  'wait_for_video_sec')
+            self.wait_for_video_sec = int(wait_for_video_sec)
+
         if config.has_section('devsetting'):
             no_catch = config.get('devsetting', 'no_catch')
             if no_catch is '0':
@@ -240,6 +244,16 @@ def process(start_time, stop_time=None, duration=5):
     by default
     """
     conf = Config()
+    if not os.path.isdir(conf.video_dir):
+        logging.info('video dir does not exists, start to create...')
+        os.mkdir(conf.video_dir)
+    if not os.path.isdir(conf.upload_dir):
+        logging.info('upload dir does not exists, start to create...')
+        os.mkdir(conf.upload_dir)
+    if len(os.listdir(conf.video_dir)) < 1:
+        logging.info('video dir has no video right now, wait %s...' % 
+            conf.wait_for_video_sec)
+        time.sleep(conf.wait_for_video_sec)
     video_editted = videoedit.editting(start_time, stop_time, 
                                                             conf.video_dir, conf.upload_dir)
 
@@ -303,8 +317,8 @@ class Processor(threading.Thread):
             if  start_time and end_time:
                 logging.debug('start:%s, end:%s' % (start_time, end_time))
                 time.sleep(2)
-                logging.debug('after process, start:%s, end:%s' % (int(str(start_time)[:10]),
-                    int(str(end_time)[:10])))                
+                logging.debug('after process, start:%s, end:%s' % 
+                    (int(str(start_time)[:10]), int(str(end_time)[:10])))                
                 process(int(str(start_time)[:10]), int(str(end_time)[:10]))
             else:
                 logging.info('received start time or end time error!')
