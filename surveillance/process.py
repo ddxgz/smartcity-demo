@@ -16,19 +16,6 @@ from utils import funclogger, time2Stamp, stamp2Time
 
 logging.basicConfig(level=logging.DEBUG)
 
-#ENDPOINT="http://10.200.44.66:8080/auth/v1.0"
-#USERNAME="test:tester"
-#USERKEY="testing"
-#AUTH_VERSION="1"
-# CONTAINER="videos"
-# UPLOAD_FILE = "*.avi"
-# LOCAL_DIR = "/root/catch_video/videos/"
-# SHELL_DIR = '/root/catch_video/catch.sh'
-# DOWNLOAD_AS = "aa"+"2"+".txt"
-# UPLOADING_INTERVAL = 6
-# VIDEOS2STOP = 3
-# THRESHOLD_CONTAINER = 40
-
 
 class Config(object):
     def __init__(self, conf_file=None):
@@ -318,7 +305,7 @@ class Processor(threading.Thread):
                 logging.debug('start:%s, end:%s' % (start_time, end_time))
                 time.sleep(2)
                 logging.debug('after process, start:%s, end:%s' % 
-                    (int(str(start_time)[:10]), int(str(end_time)[:10])))                
+                    (int(str(start_time-1)[:10]), int(str(end_time+1)[:10])))                
                 process(int(str(start_time)[:10]), int(str(end_time)[:10]))
             else:
                 logging.info('received start time or end time error!')

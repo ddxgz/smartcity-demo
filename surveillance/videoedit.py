@@ -26,7 +26,7 @@ def editting(start_time, end_time, source_folder, output_folder):
     full_video = combine_videos(video_list, source_folder, videoname, suffix)
     logging.debug('full video: %s' % full_video)
     # cut head and tail
-    head_shift_time = start_time - int(video_list[0][-14:-4])
+    head_shift_time = start_time - float(video_list[0][-14-(5+1):-4])
     duration_time = end_time - start_time + 1
     video_output = cut_video(full_video, source_folder, head_shift_time, duration_time)
     logging.debug('video_output:%s' % video_output)
@@ -46,7 +46,7 @@ def videos_in_duration(start_time, end_time, source_folder, reverse=False):
         source_folder))
     files = os.listdir(source_folder)
     logging.debug('files in source folder:%s' % files)
-    videos = get_file_with_prefix(files, frefix='demo_')
+    videos = get_file_with_prefix(files, frefix='DEMO_')
     suffix = videos[0][-4:]
     stamps = []
     video_stamps = {}
@@ -59,7 +59,7 @@ def videos_in_duration(start_time, end_time, source_folder, reverse=False):
         video_stamps[str(stamp)] = video
         # logging.debug('stamps:%s' % stamps)
         # logging.debug('video_stamps:%s' % video_stamps)
-    stamps.sort(reverse=true)
+    stamps.sort(reverse=True)
     logging.debug('stamps:%s' % stamps)
     for stamp in stamps:
         if stamp <= end_time:
@@ -82,9 +82,10 @@ def videos_in_duration(start_time, end_time, source_folder, reverse=False):
 def get_file_with_prefix(files, frefix='DEMO_'):
     videos = []
     for file_ in files:
+        logging.debug('file_ :%s , len(file_): %s, frefix:%s, len prefix:%s, file_[0:len(frefix)]:%s' % (file_, len(file_), frefix, len(frefix), file_[0:len(frefix)] ))
         if len(file_) > len(frefix) and file_[0:len(frefix)] == frefix:
             videos.append(file_)
-            logging.debug('file is video:%s' % videos)
+            logging.debug('file is video:%s' % file_)
     return videos
 
 
@@ -125,7 +126,7 @@ def cut_video(full_video, source_folder, head_shift_time, duration_time):
     # stat = commands.getoutput("ffmpeg -i " + first_video + " -ss " + shift_time + " -to " #+ in
     #     + " -acodec copy -vcodec copy " + LIST_FOLDER + "/" + new_folder + "/" + cut_video)
     stat = commands.getoutput("ffmpeg -i " + full_video + " -y " +
-        " -ss " + str(head_shift_time) + ' -t ' + str(duration_time)  +
+        " -ss " + str(int(head_shift_time)) + ' -t ' + str(int(duration_time))  +
         " -acodec copy -vcodec copy " + cut_video)
     logging.debug('in cut_video, stat:%s' % stat)
     return cut_video

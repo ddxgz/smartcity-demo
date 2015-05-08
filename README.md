@@ -19,6 +19,7 @@ TODO
 
 Requirements ( the env when dev )
 ---------------------------------------------------
+ffmpeg
 Python >= 2.7
 Six >= 1.9
 Falcon >= 0.2 
