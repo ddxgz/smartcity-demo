@@ -1,11 +1,13 @@
 Swift Video Store
 ===================================================
 
-Contains a shell script to catch video, and a Python program to upload videos to swift
+Contains a shell script to catch video, and a Python program to provide REST 
+API for get post data and to pick the target videos to upload to Swift.
 
 
 TODO
 ---------------------------------------------------
+- gevent for multiple provessors in restapi
 - ~~provide REST API ( Falcon ) ~~
 - deal with exceptions 
 - ~~use os module to handle system operations~~
