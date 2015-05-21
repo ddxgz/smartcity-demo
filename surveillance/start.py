@@ -30,6 +30,9 @@ def startall():
     child_gunicorn = subprocess.Popen(['gunicorn', '-b', '0.0.0.0:8008', 'restapi:app'], stdout=subprocess.PIPE, preexec_fn=os.setsid)
     pids.append(child_gunicorn.pid)
     logging.debug('child_gunicorn pid: %s starting...' % child_gunicorn.pid)
+    child_reaper = subprocess.Popen(['python', './reaper.py'], stdout=subprocess.PIPE, preexec_fn=os.setsid)
+    pids.append(child_reaper.pid)
+    logging.debug('child_reaper pid: %s starting...' % child_reaper.pid)
 
     pidfile = open('./pids', 'w')
     for pid in pids:
