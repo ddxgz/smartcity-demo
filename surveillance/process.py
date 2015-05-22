@@ -220,7 +220,7 @@ class ThreadStoredReaper(threading.Thread):
 
 
 @funclogger('--------process---------')
-def process(start_time, stop_time=None, duration=5):
+def process(start_time, stop_time=None, event_name='', duration=5):
     """
     cut the video based on the time parameters via ffmpeg,
     then upload the video to swift
@@ -270,8 +270,9 @@ def process(start_time, stop_time=None, duration=5):
         logging.info('start to upload...')
         # swift_upload(conn, conf)
         logging.debug('conn uploading video: %s' % video_editted)
-        file = open(video_editted)
-        conn.put_object(conf.container_video, video_editted[-25:], file)
+        videofile = open(video_editted)
+        conn.put_object(container=conf.container_video, 
+            obj=event_name+video_editted[-25:], contents=videofile)
         # swift_conn.put_object(CONTAINER, pathname, file)
         logging.debug('conn after uploading video: %s' % video_editted)
     except:
@@ -287,6 +288,12 @@ def process(start_time, stop_time=None, duration=5):
             # time.sleep(1)
             # delete_stored(video_editted)
 
+def get_event(state_in):
+    if state_in == 1:
+        return 'light_on_'
+    elif state_in == 0:
+        return 'light_off_'
+
 
 class Processor(threading.Thread):
     def __init__(self, thread_name, queue):
@@ -301,12 +308,13 @@ class Processor(threading.Thread):
             logging.info('queue item: %s' % item)
             start_time = item.get('vtime_start')
             end_time = item.get('vtime_end')
+            event_name = get_event(item.get('state'))
             if  start_time and end_time:
                 logging.debug('start:%s, end:%s' % (start_time, end_time))
                 time.sleep(2)
                 logging.debug('after process, start:%s, end:%s' % 
                     (int(str(start_time-1)[:10]), int(str(end_time+1)[:10])))                
-                process(int(str(start_time)[:10]), int(str(end_time)[:10]))
+                process(int(str(start_time)[:10]), int(str(end_time)[:10]), event_name=event_name)
             else:
                 logging.info('received start time or end time error!')
             self.queue.task_done()            

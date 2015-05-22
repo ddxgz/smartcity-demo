@@ -82,10 +82,10 @@ def videos_in_duration(start_time, end_time, source_folder, reverse=False):
 def get_file_with_prefix(files, frefix='DEMO_'):
     videos = []
     for file_ in files:
-        logging.debug('file_ :%s , len(file_): %s, frefix:%s, len prefix:%s, file_[0:len(frefix)]:%s' % (file_, len(file_), frefix, len(frefix), file_[0:len(frefix)] ))
+        # logging.debug('file_ :%s , len(file_): %s, frefix:%s, len prefix:%s, file_[0:len(frefix)]:%s' % (file_, len(file_), frefix, len(frefix), file_[0:len(frefix)] ))
         if len(file_) > len(frefix) and file_[0:len(frefix)] == frefix:
             videos.append(file_)
-            logging.debug('file is video:%s' % file_)
+            # logging.debug('file is video:%s' % file_)
     return videos
 
 
