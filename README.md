@@ -7,8 +7,9 @@ API for get post data and to pick the target videos to upload to Swift.
 
 TODO
 ---------------------------------------------------
+- fix potential bugs about timestamp processing
 - gevent for multiple provessors in restapi
-- ~~provide REST API ( Falcon ) ~~
+- ~~provide REST API ( Falcon )~~
 - deal with exceptions 
 - ~~use os module to handle system operations~~
 - ~~config file~~
