@@ -3,6 +3,7 @@ import falcon
 import json
 import Queue
 import sys
+import logging
 
 from process import Processor
 
@@ -54,13 +55,14 @@ class EventListener:
     def on_post(self, req, resp):
         try:
             raw_json = req.stream.read()
-            print('req:%s' % raw_json)
+            logging.debug('req:%s' % raw_json)
         except:
-            raise falcon.HTTPBadRequest('bad req')
+            raise falcon.HTTPBadRequest('bad req', 
+                'when read from req, please check if the req is correct.')
         try:
             result_json = json.loads(raw_json, encoding='utf-8')
-            print('result json:%s' % result_json)
-            print('start to run process....')
+            logging.debug('result json:%s' % result_json)
+            logging.info('start to run process....')
             self.queue.put(result_json)
         except:
             raise falcon.HTTPError(falcon.HTTP_400, 'malformed json')

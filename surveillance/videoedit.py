@@ -26,7 +26,14 @@ def editting(start_time, end_time, source_folder, output_folder):
     full_video = combine_videos(video_list, source_folder, videoname, suffix)
     logging.debug('full video: %s' % full_video)
     # cut head and tail
-    head_shift_time = start_time - float(video_list[0][-14-(5+1):-4])
+    try:
+        head_shift_time = start_time - float(video_list[0][-14-(5+1):-4])
+    except:
+        if len(video_list) is 0:
+            logging.info('video_list is empty...')
+            raise Exception('video_list empty, no video files in given period!')
+        else:
+            raise Exception('unknown exception when get head_shift_time!')
     duration_time = end_time - start_time + 1
     video_output = cut_video(full_video, source_folder, head_shift_time, duration_time)
     logging.debug('video_output:%s' % video_output)

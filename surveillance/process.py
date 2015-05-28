@@ -319,7 +319,7 @@ class Processor(threading.Thread):
             event_name = get_event(item.get('state'))
             if  start_time and end_time:
                 logging.debug('start:%s, end:%s' % (start_time, end_time))
-                time.sleep(2)
+                time.sleep(5)
                 logging.debug('after process, start:%s, end:%s' % 
                     (int(str(start_time-1)[:10]), int(str(end_time+1)[:10])))                
                 process(int(str(start_time)[:10]), int(str(end_time)[:10]), event_name=event_name)

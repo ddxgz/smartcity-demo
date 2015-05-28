@@ -12,5 +12,5 @@ logging.basicConfig(level=logging.DEBUG)
 class TestEventListener(testing.TestBase):
     pass
 
-if __name__ == '__main__':
-    unittest.main()
+# if __name__ == '__main__':
+#     unittest.main()
