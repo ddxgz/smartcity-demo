@@ -9,7 +9,7 @@ from six.moves import configparser
 from process import Config
 from utils import funclogger, time2Stamp, stamp2Time
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(filename='log_process.log', filemode='w', level=logging.DEBUG)
 
 
 def signal_exit_handler(signal, frame):

@@ -14,7 +14,7 @@ import swiftclient
 import videoedit
 from utils import funclogger, time2Stamp, stamp2Time
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 
 class Config(object):
@@ -288,11 +288,19 @@ def process(start_time, stop_time=None, event_name='', duration=5):
             # time.sleep(1)
             # delete_stored(video_editted)
 
+# def get_event(state_in):
+#     if state_in == 1:
+#         return 'light_on_'
+#     elif state_in == 0:
+#         return 'light_off_'
+
+
 def get_event(state_in):
-    if state_in == 1:
-        return 'light_on_'
-    elif state_in == 0:
-        return 'light_off_'
+    if state_in is not None:
+        if state_in == 0:
+            return 'leaving_'
+        else:
+            return 'person_' + str(state_in) + '_in_'
 
 
 class Processor(threading.Thread):

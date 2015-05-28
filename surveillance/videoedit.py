@@ -7,7 +7,7 @@ import functools
 
 from utils import funclogger, time2Stamp, stamp2Time
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 
 @funclogger('------------editting----------')

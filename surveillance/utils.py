@@ -2,7 +2,7 @@ import functools
 import time
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 
 def funclogger(text):

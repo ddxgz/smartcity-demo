@@ -20,6 +20,7 @@ def remove_all(path2file):
         os.remove(path2file+afile)
         logging.debug('removed: %s' % path2file+afile)
 
+
 @funclogger('------------editting----------')
 def videos_reaper(num_threshold):
     conf = Config()
