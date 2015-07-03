@@ -40,11 +40,11 @@ def startall():
     # pids.append(child_swiftbrowser.pid)
     # logging.debug('child_swiftbrowser pid: %s starting...' % child_swiftbrowser.pid)
 
-    child_sensordbclient = subprocess.Popen(['java', '-jar', 
-        '/root/sensordb-client/sensordb-client.jar'], 
-        stdout=subprocess.PIPE, preexec_fn=os.setsid)
-    pids.append(child_sensordbclient.pid)
-    logging.debug('child_sensordbclient pid: %s starting...' % child_sensordbclient.pid)
+    # child_sensordbclient = subprocess.Popen(['java', '-jar', 
+    #     '/root/sensordb-client/sensordb-client.jar'], 
+    #     stdout=subprocess.PIPE, preexec_fn=os.setsid)
+    # pids.append(child_sensordbclient.pid)
+    # logging.debug('child_sensordbclient pid: %s starting...' % child_sensordbclient.pid)
 
     pidfile = open('./pids', 'w')
     for pid in pids:
@@ -67,7 +67,7 @@ def startall():
 
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGINT, signal_exit_handler)
-    signal.pause()
+    # signal.signal(signal.SIGINT, signal_exit_handler)
+    # signal.pause()
     startall()
     # pass

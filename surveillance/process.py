@@ -105,6 +105,7 @@ def rename(pathname):
 #     logging.debug('uploaded video: %s' % stat)
 #     # print(stat)
 
+
 @funclogger('-------swift_upload-------')
 def swift_upload(swift_conn, conf):
     videos = videos2upload(conf)
@@ -180,6 +181,9 @@ def delete_excessive_objects(swift_conn, threshold):
 
 
 class ThreadExcessiveReaper(threading.Thread):
+    """
+    not used
+    """
     def __init__(self, thread_name, swift_conn, conf):
         threading.Thread.__init__(self, name=thread_name)
         self.swift_conn = swift_conn
@@ -209,6 +213,9 @@ class ThreadExcessiveReaper(threading.Thread):
 
 
 class ThreadStoredReaper(threading.Thread):
+    """
+    not used
+    """
     def __init__(self, thread_name, swift_conn, conf):
         threading.Thread.__init__(self, name=thread_name)
         self.swift_conn = swift_conn
@@ -288,14 +295,11 @@ def process(start_time, stop_time=None, event_name='', duration=5):
             # time.sleep(1)
             # delete_stored(video_editted)
 
-# def get_event(state_in):
-#     if state_in == 1:
-#         return 'light_on_'
-#     elif state_in == 0:
-#         return 'light_off_'
-
 
 def get_event(state_in):
+    """
+    return the event name by the state of coming message
+    """
     if state_in is not None:
         if state_in == 0:
             return 'leaving_'
@@ -304,6 +308,10 @@ def get_event(state_in):
 
 
 class Processor(threading.Thread):
+    """
+    Receive the messages via a queue from REST API requests, parse the param
+    in the message and pass params to process 
+    """
     def __init__(self, thread_name, queue):
         threading.Thread.__init__(self, name=thread_name)
         self.queue = queue
@@ -317,12 +325,14 @@ class Processor(threading.Thread):
             start_time = item.get('vtime_start')
             end_time = item.get('vtime_end')
             event_name = get_event(item.get('state'))
-            if  start_time and end_time:
+            if start_time and end_time:
                 logging.debug('start:%s, end:%s' % (start_time, end_time))
+                # wait a few seconds to let the video to be catched
                 time.sleep(5)
                 logging.debug('after process, start:%s, end:%s' % 
                     (int(str(start_time-1)[:10]), int(str(end_time+1)[:10])))                
-                process(int(str(start_time)[:10]), int(str(end_time)[:10]), event_name=event_name)
+                process(int(str(start_time)[:10]), int(str(end_time)[:10]), 
+                    event_name=event_name)
             else:
                 logging.info('received start time or end time error!')
             self.queue.task_done()            

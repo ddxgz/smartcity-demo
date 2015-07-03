@@ -7,7 +7,8 @@ API for get post data and to pick the target videos to upload to Swift.
 
 Notice
 ----
-The ip of camera is defined in catch.sh. Other configurations are contained in swiftclient.conf
+Currently the ip of camera and the path for storing videos are defined in catch.sh. 
+Other configurations are contained in swiftclient.conf
 
 
 TODO
