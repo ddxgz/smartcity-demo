@@ -5,6 +5,11 @@ Contains a shell script to catch video, and a Python program to provide REST
 API for get post data and to pick the target videos to upload to Swift.
 
 
+Notice
+----
+The ip of camera is defined in catch.sh. Other configurations are contained in swiftclient.conf
+
+
 TODO
 ---------------------------------------------------
 - fix potential bugs about timestamp processing

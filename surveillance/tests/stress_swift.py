@@ -11,7 +11,7 @@ import threading
 import swiftclient
 from config import  Config
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 def generate_list(prefix, num):
@@ -39,6 +39,7 @@ def funclogger(text):
 
 class SwiftStressTestCase:
     def __init__(self, con_num=1, obj_num=1, tag=''):
+        self.tag = tag
         self.test_container = 'test_con_' + tag
         self.con_num = con_num
         self.obj_num = obj_num
@@ -59,7 +60,7 @@ class SwiftStressTestCase:
 
     def test_put_obj(self):
         for container in generate_list(self.test_container, self.con_num):
-            for obj in generate_obj_list('content'+tag, self.obj_num):
+            for obj in generate_obj_list('content'+self.tag, self.obj_num):
                 self.conn.put_object(container, obj[:10], obj)
             # logging.debug('head container: %s' % container_head)
     
@@ -74,7 +75,7 @@ class SwiftStressTestCase:
     def tearDown_man(self):
         for container in generate_list(self.test_container, self.con_num):
             # print(container[-2:])
-            if len(container) == 11 and int(container[-2:]) >= 37:
+            if len(container) == 11 and int(container[-2:]) >= 39:
                 _m, objects = self.conn.get_container(container)
                 for obj in objects:
                     self.conn.delete_object(container, obj['name'])
@@ -85,34 +86,39 @@ class SwiftStressTestCase:
 class ThreadStressTest(threading.Thread):
     def __init__(self, thread_name):
         threading.Thread.__init__(self, name=thread_name)
-        stresstest = SwiftStressTestCase(con_num=10, obj_num=10, 
+        self.stresstest = SwiftStressTestCase(con_num=5, obj_num=10, 
             tag=thread_name)
+        self.thread_name = thread_name
 
     def run(self):
-        logging.info('%s test_create_container start' % (thread_name))
+        logging.info('-----------------------------------------\
+            %s test_create_container start' % (self.thread_name))
         start = time.time()
-        stresstest.test_create_container()
+        self.stresstest.test_create_container()
         interval = time.time() - start
-        logging.info('%s test_create_container end, running: %0.5f seconds' % (
-            thread_name, interval))
-        # stresstest.test_head_container()
-        logging.info('%s test_put_obj start' % (thread_name))
+        logging.info('------------------------------------------\
+            %s test_create_container end, running: %0.5f seconds' % (
+            self.thread_name, interval))
+        # self.stresstest.test_head_container()
+        logging.info('-------------------------------------------\
+            %s test_put_obj start' % (self.thread_name))
         start = time.time()
-        stresstest.test_put_obj()
+        # self.stresstest.test_put_obj()
         interval = time.time() - start
-        logging.info('%s test_put_obj end, running: %0.5f seconds' % (
-            thread_name, interval))
-        # stresstest.tearDown()
+        logging.info('-------------------------------------------\
+            %s test_put_obj end, running: %0.5f seconds' % (
+            self.thread_name, interval))
+        self.stresstest.tearDown()
 
 for i in range(3):
     thread = ThreadStressTest('t'+str(i))
-    # thread.start()
+    thread.start()
 
-stresstest = SwiftStressTestCase(con_num=100, obj_num=100)
+# stresstest = SwiftStressTestCase(con_num=1, obj_num=1)
 # stresstest.test_create_container()
 # stresstest.test_head_container()
 # stresstest.test_put_obj()
-stresstest.tearDown_man()
+# stresstest.tearDown_man()
 
 # lit = generate_obj_list('abc', 5)
 # print(lit[0][:2])

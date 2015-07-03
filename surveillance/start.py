@@ -34,6 +34,18 @@ def startall():
     pids.append(child_reaper.pid)
     logging.debug('child_reaper pid: %s starting...' % child_reaper.pid)
 
+    # child_swiftbrowser = subprocess.Popen(['python', 
+    #     '/root/swift-webstorage/manage.py', 'runserver', '0.0.0.0:8000'], 
+    #     stdout=subprocess.PIPE, preexec_fn=os.setsid)
+    # pids.append(child_swiftbrowser.pid)
+    # logging.debug('child_swiftbrowser pid: %s starting...' % child_swiftbrowser.pid)
+
+    child_sensordbclient = subprocess.Popen(['java', '-jar', 
+        '/root/sensordb-client/sensordb-client.jar'], 
+        stdout=subprocess.PIPE, preexec_fn=os.setsid)
+    pids.append(child_sensordbclient.pid)
+    logging.debug('child_sensordbclient pid: %s starting...' % child_sensordbclient.pid)
+
     pidfile = open('./pids', 'w')
     for pid in pids:
         pidfile.write(str(pid) + '\n')
