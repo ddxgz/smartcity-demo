@@ -6,11 +6,12 @@ import logging
 
 from six.moves import configparser
 
-from process import Config
+from config import Config
 from utils import funclogger, time2Stamp, stamp2Time
 
-logging.basicConfig(filename='log_process.log', filemode='w', level=logging.DEBUG)
-
+# logging.basicConfig(filename='log_process.log', filemode='w', level=logging.DEBUG)
+logging.basicConfig(format='===========My:%(levelname)s:%(message)s=========', 
+    level=logging.DEBUG)
 
 def signal_exit_handler(signal, frame):
     print('You pressed Ctrl+C, start to stop all the processes...')
@@ -24,7 +25,7 @@ def startall():
     #     preexec_fn=os.setsid)
     conf = Config()
     pids = []
-    child_catch = subprocess.Popen('exec sh ' + conf.shell_dir, shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid)
+    child_catch = subprocess.Popen('exec nohup sh ' + conf.shell_dir, shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid)
     pids.append(child_catch.pid)
     logging.debug('child_catch pid: %s starting...' % child_catch.pid)
     child_gunicorn = subprocess.Popen(['gunicorn', '-b', '0.0.0.0:8008', 'restapi:app'], stdout=subprocess.PIPE, preexec_fn=os.setsid)

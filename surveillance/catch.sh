@@ -10,6 +10,8 @@ now()
 touch /tmp/catchtime
 
 mkdir -p "$HOME/catched_video/videos"
+mkdir -p "$HOME/catched_video/videos/concats"
+mkdir -p "$HOME/catched_video/videos/upload"
 
 while [ 1 ]; do
      timestamp=`date +"%s.%5N"`
@@ -17,7 +19,7 @@ while [ 1 ]; do
 # the command below is the one used 
      # ffmpeg  -t 00:00:05 -rtsp_transport tcp -i $url -codec copy /root/catch_video/videos/DEMO_$timestamp.avi
      # ffmpeg  -t 00:00:10 -rtsp_transport tcp -i $url -codec copy /root/catch_video/videos/DEMO_$timestamp.avi
-     ffmpeg  -t 00:00:10 -rtsp_transport tcp -i $url -codec copy $HOME/catched_video/videos/DEMO_$timestamp.avi
+     ffmpeg  -t 00:00:10 -rtsp_transport tcp -i $url -codec copy $HOME/catched_video/videos/DEMO_$timestamp.mp4
      # ffmpeg  -timelimit 5 -i $url -codec copy ./videos/DEMO_$timestamp.mp4
 done
 

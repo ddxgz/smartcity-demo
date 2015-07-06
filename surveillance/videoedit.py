@@ -5,10 +5,13 @@ import string
 import logging
 import functools
 
+from config import Config
 from utils import funclogger, time2Stamp, stamp2Time
 
 # logging.basicConfig(level=logging.DEBUG)
 
+
+conf = Config()
 
 @funclogger('------------editting----------')
 def editting(start_time, end_time, source_folder, output_folder):
@@ -53,8 +56,10 @@ def videos_in_duration(start_time, end_time, source_folder, reverse=False):
         source_folder))
     files = os.listdir(source_folder)
     logging.debug('files in source folder:%s' % files)
-    videos = get_file_with_prefix(files, frefix='DEMO_')
-    suffix = videos[0][-4:]
+    # videos = get_file_with_prefix(files, frefix='DEMO_')
+    videos = get_file_with_prefix(files, frefix=conf.video_file_prefix+'_')
+    # suffix = videos[0][-4:]
+    suffix = conf.upload_file[-4:]
     stamps = []
     video_stamps = {}
     videos_in_duration = []

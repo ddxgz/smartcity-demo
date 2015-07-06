@@ -8,7 +8,7 @@ import functools
 import swiftclient
 
 from utils import funclogger, time2Stamp, stamp2Time
-from process import Config
+from config import Config
 from videoedit import get_file_with_prefix
 
 logging.basicConfig(level=logging.DEBUG)
@@ -59,6 +59,7 @@ def container_reaper(num_threshold):
         conn.delete_container(conf.container_video)
         time.sleep(5)
         conn.put_container(conf.container_video)
+
 
 # videos_reaper(3)
 if __name__ == '__main__':
