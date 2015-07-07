@@ -14,7 +14,7 @@ Other configurations are contained in swiftclient.conf
 TODO
 ---------------------------------------------------
 - fix potential bugs about timestamp processing
-- gevent for multiple provessors in restapi
+- gevent for multiple provessors 
 - ~~provide REST API ( Falcon ) ~~
 - deal with exceptions 
 - ~~use os module to handle system operations~~

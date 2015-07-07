@@ -15,9 +15,10 @@ import videoedit
 from config import Config
 from utils import funclogger, time2Stamp, stamp2Time
 
-# logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(filename='log_process.log', filemode='w', level=logging.DEBUG)
 logging.basicConfig(format='===========My:%(levelname)s:%(message)s=========', 
     level=logging.DEBUG)
+
 
 @funclogger('--------auto_rename---------')
 def rename(pathname):
@@ -25,32 +26,17 @@ def rename(pathname):
     logging.info('rename to newname: %s' % newname)
     os.rename(pathname, newname)
 
-## not used
-# def catch_video():
-#     stat = commands.getoutput("sh /root/catch_video/catch.sh")
-#     logging.debug('catch.sh...')
-
-## not used
-# def upload(pathname, conf):
-#     stat = commands.getoutput("swift -A " + conf.auth_url + " -U "+
-#                               conf.account_username
-#                 + " -K " + conf.password + " upload " + conf.container_video +
-#                               " " + pathname)
-#                 # + ' --object-name ' + filename)
-#     logging.debug('uploaded video: %s' % stat)
-#     # print(stat)
-
 
 @funclogger('-------swift_upload-------')
 def swift_upload(swift_conn, conf):
     videos = videos2upload(conf)
-    logging.info('111 videos: %s ' % videos)
+    logging.info('videos: %s ' % videos)
     if not videos or len(videos) is 0:
         logging.info('no video can be uploaded, wait: %s seconds' % 
             conf.uploading_interval)
         time.sleep(conf.uploading_interval)
         videos = videos2upload(conf)
-    logging.info('videos: %s ' % videos)
+    logging.info('videos after sleep: %s ' % videos)
     for video in videos:
         # upload(video)
         # swift_upload(swift_conn, video)
@@ -68,7 +54,6 @@ def swift_upload(swift_conn, conf):
 
 @funclogger('--------delete_uploaded---------')
 def delete_uploaded(pathname):
-    # stat = commands.getoutput("rm " + LOCAL_DIR + "*." + suffix)
     # instead of os.remove()
     stat = commands.getoutput("rm " + pathname)
     logging.debug('deleted video: %s' % pathname)
@@ -106,13 +91,6 @@ def delete_excessive_objects(swift_conn, threshold):
     delete the whole container, and create a new one.
     """
     logging.debug('objects num before delete: not implemented')
-
-
-# def subfunc():
-#     print('threading %s running...' % threading.current_thread().name)
-#     # datain = raw_input('pleas input: ')
-
-#     print('threading %s ending...' % threading.current_thread().name)
 
 
 class ThreadExcessiveReaper(threading.Thread):
@@ -184,7 +162,7 @@ def process(start_time, stop_time=None, event_name='', duration=5):
             conf.wait_for_video_sec)
         time.sleep(conf.wait_for_video_sec)
     video_editted = videoedit.editting(start_time, stop_time, 
-                                                            conf.video_dir, conf.upload_dir)
+                                        conf.video_dir, conf.upload_dir)
 
     if conf.no_catch:
         pass
@@ -261,7 +239,7 @@ class Processor(threading.Thread):
             end_time = item.get('vtime_end')
             event_name = get_event(item.get('state'))
             if start_time and end_time:
-                logging.debug('start:%s, end:%s' % (start_time, end_time))
+                logging.debug('start:{}, end:{}'.format(start_time, end_time))
                 # wait a few seconds to let the video to be catched
                 time.sleep(5)
                 logging.debug('after process, start:%s, end:%s' % 
@@ -273,6 +251,6 @@ class Processor(threading.Thread):
             self.queue.task_done()            
 
 
-if __name__ == '__main__':
-    #main()
-    pass
+# if __name__ == '__main__':
+#     #main()
+#     pass

@@ -27,5 +27,3 @@ def time2Stamp(timestr, format_type='%m/%d/%Y %H:%M:%S'):
 def stamp2Time(stamp, format_type='%m/%d/%Y %H:%M:%S'):
     return time.strftime(format_type, time.localtime(stamp))
 
-
-print(stamp2Time(1433382656))

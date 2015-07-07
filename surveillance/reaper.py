@@ -11,6 +11,7 @@ from utils import funclogger, time2Stamp, stamp2Time
 from config import Config
 from videoedit import get_file_with_prefix
 
+
 logging.basicConfig(level=logging.DEBUG)
 
 

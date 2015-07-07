@@ -8,19 +8,20 @@ import functools
 from config import Config
 from utils import funclogger, time2Stamp, stamp2Time
 
-# logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(filename='log_process.log', filemode='w', level=logging.DEBUG)
 
 
 conf = Config()
 
 @funclogger('------------editting----------')
 def editting(start_time, end_time, source_folder, output_folder):
-    # time1 = time2Stamp(start_time)
-    # time2 = time2Stamp(end_time)
-    # time1 = int(time1)
-    # time2 = int(time2)
-    # logging.debug("start time: %s, time1: %s", start_time, time1)
-    # logging.debug("end time:  %s, time2: %s", end_time, time2)
+    """
+    return: 
+    video_output: the path to the vidoe for uploading
+    """
+    # time1 = int(time2Stamp(start_time))
+    # time2 = int(time2Stamp(end_time))
+
     # video_list is in order, need to check if ealiest and latest video suitable
     video_list, suffix = videos_in_duration(start_time, end_time, source_folder)
     logging.debug('video_list:%s, suffix: %s' % (video_list, suffix))
@@ -38,7 +39,8 @@ def editting(start_time, end_time, source_folder, output_folder):
         else:
             raise Exception('unknown exception when get head_shift_time!')
     duration_time = end_time - start_time + 1
-    video_output = cut_video(full_video, source_folder, head_shift_time, duration_time)
+    video_output = cut_video(full_video, source_folder, head_shift_time, 
+                                duration_time)
     logging.debug('video_output:%s' % video_output)
     return video_output
 
@@ -52,8 +54,8 @@ def videos_in_duration(start_time, end_time, source_folder, reverse=False):
     return:
     video_list, suffix
     """
-    logging.debug('start time:%s, endtime: %s, source folder:%s' % (start_time, end_time,
-        source_folder))
+    logging.debug('start time:%s, endtime: %s, source folder:%s' 
+        % (start_time, end_time, source_folder))
     files = os.listdir(source_folder)
     logging.debug('files in source folder:%s' % files)
     # videos = get_file_with_prefix(files, frefix='DEMO_')
