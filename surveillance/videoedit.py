@@ -9,6 +9,9 @@ from config import Config
 from utils import funclogger, time2Stamp, stamp2Time
 
 # logging.basicConfig(filename='log_process.log', filemode='w', level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG,
+#                 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+#                 datefmt='%d %b %Y %H:%M:%S')
 
 
 conf = Config()

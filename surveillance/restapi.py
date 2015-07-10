@@ -8,6 +8,9 @@ import logging
 from process import Processor
 
 #sys.path.append('.')
+# logging.basicConfig(level=logging.DEBUG,
+#                 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+#                 datefmt='%d %b %Y %H:%M:%S')
 
 
 class EventListener:
