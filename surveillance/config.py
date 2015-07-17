@@ -41,8 +41,10 @@ class Config(object):
             self.skip_tests = True
         if config.has_section('catchconf'):
             self.container_video = config.get('catchconf', 'container_video')
-            self.video_dir = config.get('catchconf', 'video_dir')
-            self.shell_dir = config.get('catchconf', 'shell_dir')
+            self.video_dir = os.environ['HOME'] + '/' + \
+                            config.get('catchconf', 'video_dir').lstrip('/')
+            self.shell_dir = os.environ['HOME'] + '/' + \
+                            config.get('catchconf', 'shell_dir').lstrip('/')
             self.upload_file = config.get('catchconf', 'upload_file')
             self.video_file_prefix = config.get('catchconf', 'video_file_prefix')
             uploading_interval = config.get('catchconf',
@@ -53,7 +55,8 @@ class Config(object):
             self.uploading_interval = int(uploading_interval)
             self.loopcount = int(loopcount)
             self.threshold_container = int(threshold_container)
-            self.upload_dir = config.get('catchconf', 'upload_dir')
+            self.upload_dir = os.environ['HOME'] + '/' + \
+                            config.get('catchconf', 'upload_dir').lstrip('/')
             wait_for_video_sec = config.get('catchconf',
                                                   'wait_for_video_sec')
             self.wait_for_video_sec = int(wait_for_video_sec)
