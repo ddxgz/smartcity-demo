@@ -23,7 +23,6 @@ from utils import funclogger, time2Stamp, stamp2Time
 #                 datefmt='%d %b %Y %H:%M:%S')
 
 
-
 @funclogger('--------auto_rename---------')
 def rename(pathname):
     newname = pathname[:len(pathname)-14] + str(time.time())[0:10] + pathname[-4:]
@@ -165,16 +164,19 @@ def process(start_time, stop_time=None, event_name='', duration=5):
         logging.info('video dir has no video right now, wait %s...' % 
             conf.wait_for_video_sec)
         time.sleep(conf.wait_for_video_sec)
-    video_editted = videoedit.editting(start_time, stop_time, 
+        
+    try:
+        logging.debug('start to get the video file...')
+        video_editted = videoedit.editting(start_time, stop_time, 
                                         conf.video_dir, conf.upload_dir)
+    except:
+        logging.debug('exception when get the video file \
+            by videoedit.editting()')
 
     if conf.no_catch:
         pass
     else:
         pass
-        # cut the video via ffmpeg by shell scripts
-        # child_catch = subprocess.Popen('exec sh ' + conf.shell_dir, shell=True)
-        # logging.debug('child_catch pid: %s starting...' % child_catch.pid)
 
     conn = swiftclient.Connection(conf.auth_url,
                                   conf.account_username,
@@ -251,7 +253,7 @@ class Processor(threading.Thread):
                 process(int(str(start_time)[:10]), int(str(end_time)[:10]), 
                     event_name=event_name)
             else:
-                logging.info('received start time or end time error!')
+                logging.info('error of received start time or end time!')
             self.queue.task_done()            
 
 

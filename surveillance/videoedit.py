@@ -14,7 +14,8 @@ from utils import funclogger, time2Stamp, stamp2Time
 #                 datefmt='%d %b %Y %H:%M:%S')
 
 
-conf = Config()
+CONF = Config()
+
 
 @funclogger('------------editting----------')
 def editting(start_time, end_time, source_folder, output_folder):
@@ -62,9 +63,9 @@ def videos_in_duration(start_time, end_time, source_folder, reverse=False):
     files = os.listdir(source_folder)
     logging.debug('files in source folder:%s' % files)
     # videos = get_file_with_prefix(files, frefix='DEMO_')
-    videos = get_file_with_prefix(files, frefix=conf.video_file_prefix+'_')
+    videos = get_file_with_prefix(files, frefix=CONF.video_file_prefix+'_')
     # suffix = videos[0][-4:]
-    suffix = conf.upload_file[-4:]
+    suffix = CONF.upload_file[-4:]
     stamps = []
     video_stamps = {}
     videos_in_duration = []
@@ -122,12 +123,15 @@ def combine_videos(videos, source_folder, videoname, suffix):
 def write_ffmpeg_concat_file(list_to_write, source_folder, videoname):
     logging.debug('in write_ffmpeg_concat_file:%s' % list_to_write)
     list_file_path_name =  source_folder + videoname + '.txt'
-    file_object = open(list_file_path_name,"w+")
+    try:
+        file_object = open(list_file_path_name,"w+")
+    except:
+        logging.error('fail to open concat list file to write!')
     try:
         for video in list_to_write:
             file_object.write("file '" + video + "'\n")
     except:
-        logging.debug('write_ffmpeg_concat_file - try to write failed!')
+        logging.error('write_ffmpeg_concat_file - try to write failed!')
     finally:
         file_object.close( )
     return list_file_path_name
@@ -149,9 +153,9 @@ def cut_video(full_video, source_folder, head_shift_time, duration_time):
     return cut_video
 
 
-if __name__ == '__main__':
-    editting(1430720523, 1430720740, '/home/pc/catch_video/videos/' ,
-        '/home/pc/catch_video/videos/upload/')
+# if __name__ == '__main__':
+#     editting(1430720523, 1430720740, '/home/pc/catch_video/videos/' ,
+#         '/home/pc/catch_video/videos/upload/')
     # editting(1430404940, 1430404952, '/root/catch_video/videos/' ,
     #     '/root/catch_video/videos/upload/')
     #sys.exit(main())

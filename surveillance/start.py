@@ -12,7 +12,8 @@ from utils import funclogger, time2Stamp, stamp2Time
 # logging.basicConfig(filename='log_process.log', filemode='w', level=logging.DEBUG)
 # logging.basicConfig(format='===========My:%(levelname)s:%(message)s=========', 
 #     level=logging.DEBUG)
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(filename='log_start.log', filemode='w',
+                level=logging.DEBUG,
                 format='[%(levelname)s] %(message)s [%(filename)s][line:%(lineno)d] %(asctime)s ',
                 datefmt='%d %b %Y %H:%M:%S')
 

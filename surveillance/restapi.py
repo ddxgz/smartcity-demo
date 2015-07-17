@@ -11,6 +11,10 @@ from process import Processor
 # logging.basicConfig(level=logging.DEBUG,
 #                 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
 #                 datefmt='%d %b %Y %H:%M:%S')
+logging.basicConfig(filename='log_restapi.log', filemode='w',
+                level=logging.DEBUG,
+                format='[%(levelname)s] %(message)s [%(filename)s][line:%(lineno)d] %(asctime)s ',
+                datefmt='%d %b %Y %H:%M:%S')
 
 
 class EventListener:

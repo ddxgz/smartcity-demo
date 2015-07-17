@@ -19,7 +19,7 @@ TODO
 - deal with exceptions 
 - ~~use os module to handle system operations~~
 - ~~config file~~
-- swift functions applying
+- ~swift functions applying~
 - optimize uploading
 - tune ffmpeg to remove error messages
 - add tests
