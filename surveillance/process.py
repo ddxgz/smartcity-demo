@@ -12,76 +12,15 @@ from six.moves import configparser
 
 import swiftclient
 import videoedit
+from config import Config
 from utils import funclogger, time2Stamp, stamp2Time
 
-# logging.basicConfig(level=logging.DEBUG)
-
-
-class Config(object):
-    def __init__(self, conf_file=None):
-        if conf_file:
-            self.config_file = conf_file
-            self._get_config(specified=True)
-        else:
-            self._get_config()
-
-    def _get_config(self, specified=False):
-        if specified is True:
-            config_file = self.config_file
-        else:
-            config_file = os.environ.get('SWIFTCLIENT_CONFIG_FILE',
-                                     './swiftclient.conf')
-        config = configparser.SafeConfigParser({'auth_version': '1'})
-        config.read(config_file)
-        if config.has_section('swiftconf'):
-            auth_host = config.get('swiftconf', 'auth_host')
-            auth_port = config.getint('swiftconf', 'auth_port')
-            auth_ssl = config.getboolean('swiftconf', 'auth_ssl')
-            auth_prefix = config.get('swiftconf', 'auth_prefix')
-            self.auth_version = config.get('swiftconf', 'auth_version')
-            self.account = config.get('swiftconf', 'account')
-            self.username = config.get('swiftconf', 'username')
-            self.password = config.get('swiftconf', 'password')
-            self.auth_url = ""
-            if auth_ssl:
-                self.auth_url += "https://"
-            else:
-                self.auth_url += "http://"
-            self.auth_url += "%s:%s%s" % (auth_host, auth_port, auth_prefix)
-            if self.auth_version == "1":
-                self.auth_url += 'v1.0'
-            self.account_username = "%s:%s" % (self.account, self.username)
-        else:
-            self.skip_tests = True
-        if config.has_section('catchconf'):
-            self.container_video = config.get('catchconf', 'container_video')
-            self.video_dir = config.get('catchconf', 'video_dir')
-            self.shell_dir = config.get('catchconf', 'shell_dir')
-            self.upload_file = config.get('catchconf', 'upload_file')
-            uploading_interval = config.get('catchconf',
-                                                 'uploading_interval')
-            loopcount = config.get('catchconf', 'loopcount')
-            threshold_container = config.get('catchconf',
-                                                  'threshold_container')
-            self.uploading_interval = int(uploading_interval)
-            self.loopcount = int(loopcount)
-            self.threshold_container = int(threshold_container)
-            self.upload_dir = config.get('catchconf', 'upload_dir')
-            wait_for_video_sec = config.get('catchconf',
-                                                  'wait_for_video_sec')
-            self.wait_for_video_sec = int(wait_for_video_sec)
-
-        if config.has_section('devsetting'):
-            no_catch = config.get('devsetting', 'no_catch')
-            if no_catch is '0':
-                self.no_catch = 0
-            else:
-                self.no_catch = 1
-            auto_rename = config.get('devsetting', 'auto_rename')
-            if auto_rename is '0':
-                self.auto_rename = 0
-            else:
-                self.auto_rename = 1
+# logging.basicConfig(filename='log_process.log', filemode='w', level=logging.DEBUG)
+# logging.basicConfig(format='===========My:%(levelname)s:%(message)s=========', 
+#     level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG,
+#                 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+#                 datefmt='%d %b %Y %H:%M:%S')
 
 
 @funclogger('--------auto_rename---------')
@@ -90,31 +29,17 @@ def rename(pathname):
     logging.info('rename to newname: %s' % newname)
     os.rename(pathname, newname)
 
-## not used
-# def catch_video():
-#     stat = commands.getoutput("sh /root/catch_video/catch.sh")
-#     logging.debug('catch.sh...')
-
-## not used
-# def upload(pathname, conf):
-#     stat = commands.getoutput("swift -A " + conf.auth_url + " -U "+
-#                               conf.account_username
-#                 + " -K " + conf.password + " upload " + conf.container_video +
-#                               " " + pathname)
-#                 # + ' --object-name ' + filename)
-#     logging.debug('uploaded video: %s' % stat)
-#     # print(stat)
 
 @funclogger('-------swift_upload-------')
 def swift_upload(swift_conn, conf):
     videos = videos2upload(conf)
-    logging.info('111 videos: %s ' % videos)
+    logging.info('videos: %s ' % videos)
     if not videos or len(videos) is 0:
         logging.info('no video can be uploaded, wait: %s seconds' % 
             conf.uploading_interval)
         time.sleep(conf.uploading_interval)
         videos = videos2upload(conf)
-    logging.info('videos: %s ' % videos)
+    logging.info('videos after sleep: %s ' % videos)
     for video in videos:
         # upload(video)
         # swift_upload(swift_conn, video)
@@ -132,7 +57,6 @@ def swift_upload(swift_conn, conf):
 
 @funclogger('--------delete_uploaded---------')
 def delete_uploaded(pathname):
-    # stat = commands.getoutput("rm " + LOCAL_DIR + "*." + suffix)
     # instead of os.remove()
     stat = commands.getoutput("rm " + pathname)
     logging.debug('deleted video: %s' % pathname)
@@ -172,14 +96,10 @@ def delete_excessive_objects(swift_conn, threshold):
     logging.debug('objects num before delete: not implemented')
 
 
-# def subfunc():
-#     print('threading %s running...' % threading.current_thread().name)
-#     # datain = raw_input('pleas input: ')
-
-#     print('threading %s ending...' % threading.current_thread().name)
-
-
 class ThreadExcessiveReaper(threading.Thread):
+    """
+    not used
+    """
     def __init__(self, thread_name, swift_conn, conf):
         threading.Thread.__init__(self, name=thread_name)
         self.swift_conn = swift_conn
@@ -209,6 +129,9 @@ class ThreadExcessiveReaper(threading.Thread):
 
 
 class ThreadStoredReaper(threading.Thread):
+    """
+    not used
+    """
     def __init__(self, thread_name, swift_conn, conf):
         threading.Thread.__init__(self, name=thread_name)
         self.swift_conn = swift_conn
@@ -241,16 +164,19 @@ def process(start_time, stop_time=None, event_name='', duration=5):
         logging.info('video dir has no video right now, wait %s...' % 
             conf.wait_for_video_sec)
         time.sleep(conf.wait_for_video_sec)
-    video_editted = videoedit.editting(start_time, stop_time, 
-                                                            conf.video_dir, conf.upload_dir)
+        
+    try:
+        logging.debug('start to get the video file...')
+        video_editted = videoedit.editting(start_time, stop_time, 
+                                        conf.video_dir, conf.upload_dir)
+    except:
+        logging.debug('exception when get the video file \
+            by videoedit.editting()')
 
     if conf.no_catch:
         pass
     else:
         pass
-        # cut the video via ffmpeg by shell scripts
-        # child_catch = subprocess.Popen('exec sh ' + conf.shell_dir, shell=True)
-        # logging.debug('child_catch pid: %s starting...' % child_catch.pid)
 
     conn = swiftclient.Connection(conf.auth_url,
                                   conf.account_username,
@@ -288,14 +214,11 @@ def process(start_time, stop_time=None, event_name='', duration=5):
             # time.sleep(1)
             # delete_stored(video_editted)
 
-# def get_event(state_in):
-#     if state_in == 1:
-#         return 'light_on_'
-#     elif state_in == 0:
-#         return 'light_off_'
-
 
 def get_event(state_in):
+    """
+    return the event name by the state of coming message
+    """
     if state_in is not None:
         if state_in == 0:
             return 'leaving_'
@@ -304,6 +227,10 @@ def get_event(state_in):
 
 
 class Processor(threading.Thread):
+    """
+    Receive the messages via a queue from REST API requests, parse the param
+    in the message and pass params to process 
+    """
     def __init__(self, thread_name, queue):
         threading.Thread.__init__(self, name=thread_name)
         self.queue = queue
@@ -317,17 +244,19 @@ class Processor(threading.Thread):
             start_time = item.get('vtime_start')
             end_time = item.get('vtime_end')
             event_name = get_event(item.get('state'))
-            if  start_time and end_time:
-                logging.debug('start:%s, end:%s' % (start_time, end_time))
+            if start_time and end_time:
+                logging.debug('start:{}, end:{}'.format(start_time, end_time))
+                # wait a few seconds to let the video to be catched
                 time.sleep(5)
                 logging.debug('after process, start:%s, end:%s' % 
                     (int(str(start_time-1)[:10]), int(str(end_time+1)[:10])))                
-                process(int(str(start_time)[:10]), int(str(end_time)[:10]), event_name=event_name)
+                process(int(str(start_time)[:10]), int(str(end_time)[:10]), 
+                    event_name=event_name)
             else:
-                logging.info('received start time or end time error!')
+                logging.info('error of received start time or end time!')
             self.queue.task_done()            
 
 
-if __name__ == '__main__':
-    #main()
-    pass
+# if __name__ == '__main__':
+#     #main()
+#     pass

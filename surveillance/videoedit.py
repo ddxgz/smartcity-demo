@@ -5,19 +5,27 @@ import string
 import logging
 import functools
 
+from config import Config
 from utils import funclogger, time2Stamp, stamp2Time
 
-# logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(filename='log_process.log', filemode='w', level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG,
+#                 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+#                 datefmt='%d %b %Y %H:%M:%S')
+
+
+CONF = Config()
 
 
 @funclogger('------------editting----------')
 def editting(start_time, end_time, source_folder, output_folder):
-    # time1 = time2Stamp(start_time)
-    # time2 = time2Stamp(end_time)
-    # time1 = int(time1)
-    # time2 = int(time2)
-    # logging.debug("start time: %s, time1: %s", start_time, time1)
-    # logging.debug("end time:  %s, time2: %s", end_time, time2)
+    """
+    return: 
+    video_output: the path to the vidoe for uploading
+    """
+    # time1 = int(time2Stamp(start_time))
+    # time2 = int(time2Stamp(end_time))
+
     # video_list is in order, need to check if ealiest and latest video suitable
     video_list, suffix = videos_in_duration(start_time, end_time, source_folder)
     logging.debug('video_list:%s, suffix: %s' % (video_list, suffix))
@@ -35,7 +43,8 @@ def editting(start_time, end_time, source_folder, output_folder):
         else:
             raise Exception('unknown exception when get head_shift_time!')
     duration_time = end_time - start_time + 1
-    video_output = cut_video(full_video, source_folder, head_shift_time, duration_time)
+    video_output = cut_video(full_video, source_folder, head_shift_time, 
+                                duration_time)
     logging.debug('video_output:%s' % video_output)
     return video_output
 
@@ -49,12 +58,14 @@ def videos_in_duration(start_time, end_time, source_folder, reverse=False):
     return:
     video_list, suffix
     """
-    logging.debug('start time:%s, endtime: %s, source folder:%s' % (start_time, end_time,
-        source_folder))
+    logging.debug('start time:%s, endtime: %s, source folder:%s' 
+        % (start_time, end_time, source_folder))
     files = os.listdir(source_folder)
     logging.debug('files in source folder:%s' % files)
-    videos = get_file_with_prefix(files, frefix='DEMO_')
-    suffix = videos[0][-4:]
+    # videos = get_file_with_prefix(files, frefix='DEMO_')
+    videos = get_file_with_prefix(files, frefix=CONF.video_file_prefix+'_')
+    # suffix = videos[0][-4:]
+    suffix = CONF.upload_file[-4:]
     stamps = []
     video_stamps = {}
     videos_in_duration = []
@@ -112,12 +123,15 @@ def combine_videos(videos, source_folder, videoname, suffix):
 def write_ffmpeg_concat_file(list_to_write, source_folder, videoname):
     logging.debug('in write_ffmpeg_concat_file:%s' % list_to_write)
     list_file_path_name =  source_folder + videoname + '.txt'
-    file_object = open(list_file_path_name,"w+")
+    try:
+        file_object = open(list_file_path_name,"w+")
+    except:
+        logging.error('fail to open concat list file to write!')
     try:
         for video in list_to_write:
             file_object.write("file '" + video + "'\n")
     except:
-        logging.debug('write_ffmpeg_concat_file - try to write failed!')
+        logging.error('write_ffmpeg_concat_file - try to write failed!')
     finally:
         file_object.close( )
     return list_file_path_name
@@ -139,9 +153,9 @@ def cut_video(full_video, source_folder, head_shift_time, duration_time):
     return cut_video
 
 
-if __name__ == '__main__':
-    editting(1430720523, 1430720740, '/home/pc/catch_video/videos/' ,
-        '/home/pc/catch_video/videos/upload/')
+# if __name__ == '__main__':
+#     editting(1430720523, 1430720740, '/home/pc/catch_video/videos/' ,
+#         '/home/pc/catch_video/videos/upload/')
     # editting(1430404940, 1430404952, '/root/catch_video/videos/' ,
     #     '/root/catch_video/videos/upload/')
     #sys.exit(main())

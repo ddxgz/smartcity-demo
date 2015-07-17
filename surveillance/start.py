@@ -6,10 +6,16 @@ import logging
 
 from six.moves import configparser
 
-from process import Config
+from config import Config
 from utils import funclogger, time2Stamp, stamp2Time
 
-logging.basicConfig(filename='log_process.log', filemode='w', level=logging.DEBUG)
+# logging.basicConfig(filename='log_process.log', filemode='w', level=logging.DEBUG)
+# logging.basicConfig(format='===========My:%(levelname)s:%(message)s=========', 
+#     level=logging.DEBUG)
+logging.basicConfig(filename='log_start.log', filemode='w',
+                level=logging.DEBUG,
+                format='[%(levelname)s] %(message)s [%(filename)s][line:%(lineno)d] %(asctime)s ',
+                datefmt='%d %b %Y %H:%M:%S')
 
 
 def signal_exit_handler(signal, frame):
@@ -19,20 +25,38 @@ def signal_exit_handler(signal, frame):
         logging.debug('killed pid: %s ...' % pid)
     sys.exit(0)
 
+
 def startall():
     # child_catch = subprocess.Popen('sh ' + SHELL_DIR, shell=True,
     #     preexec_fn=os.setsid)
     conf = Config()
     pids = []
-    child_catch = subprocess.Popen('exec sh ' + conf.shell_dir, shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid)
+    child_catch = subprocess.Popen('exec nohup sh ' + conf.shell_dir, 
+        shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid)
     pids.append(child_catch.pid)
     logging.debug('child_catch pid: %s starting...' % child_catch.pid)
-    child_gunicorn = subprocess.Popen(['gunicorn', '-b', '0.0.0.0:8008', 'restapi:app'], stdout=subprocess.PIPE, preexec_fn=os.setsid)
+    
+    child_gunicorn = subprocess.Popen(['gunicorn', '-b', '0.0.0.0:8008', 
+        'restapi:app'], stdout=subprocess.PIPE, preexec_fn=os.setsid)
     pids.append(child_gunicorn.pid)
     logging.debug('child_gunicorn pid: %s starting...' % child_gunicorn.pid)
-    child_reaper = subprocess.Popen(['python', './reaper.py'], stdout=subprocess.PIPE, preexec_fn=os.setsid)
+    
+    child_reaper = subprocess.Popen(['python', './reaper.py'], 
+        stdout=subprocess.PIPE, preexec_fn=os.setsid)
     pids.append(child_reaper.pid)
     logging.debug('child_reaper pid: %s starting...' % child_reaper.pid)
+
+    # child_swiftbrowser = subprocess.Popen(['python', 
+    #     '/root/swift-webstorage/manage.py', 'runserver', '0.0.0.0:8000'], 
+    #     stdout=subprocess.PIPE, preexec_fn=os.setsid)
+    # pids.append(child_swiftbrowser.pid)
+    # logging.debug('child_swiftbrowser pid: %s starting...' % child_swiftbrowser.pid)
+
+    # child_sensordbclient = subprocess.Popen(['java', '-jar', 
+    #     '/root/sensordb-client/sensordb-client.jar'], 
+    #     stdout=subprocess.PIPE, preexec_fn=os.setsid)
+    # pids.append(child_sensordbclient.pid)
+    # logging.debug('child_sensordbclient pid: %s starting...' % child_sensordbclient.pid)
 
     pidfile = open('./pids', 'w')
     for pid in pids:
@@ -55,7 +79,7 @@ def startall():
 
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGINT, signal_exit_handler)
-    signal.pause()
+    # signal.signal(signal.SIGINT, signal_exit_handler)
+    # signal.pause()
     startall()
     # pass

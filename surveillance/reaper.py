@@ -6,12 +6,21 @@ import logging
 import functools
 
 import swiftclient
+from swiftclient.exceptions import ClientException
 
 from utils import funclogger, time2Stamp, stamp2Time
-from process import Config
+from config import Config
 from videoedit import get_file_with_prefix
 
-logging.basicConfig(level=logging.DEBUG)
+
+# logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG,
+#                 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+#                 datefmt='%d %b %Y %H:%M:%S')
+logging.basicConfig(filename='log_reaper.log', filemode='w',
+                level=logging.DEBUG,
+                format='[%(levelname)s] %(message)s [%(filename)s][line:%(lineno)d] %(asctime)s ',
+                datefmt='%d %b %Y %H:%M:%S')
 
 
 def remove_all(path2file):
@@ -33,15 +42,24 @@ def videos_reaper(num_threshold):
         logging.debug('videos:%s' % videos)
         old_videos = videos[0:len(videos)-num_threshold]
         for old_video in old_videos:
-            os.remove(conf.video_dir+old_video)
-            logging.debug('removed: %s' % conf.video_dir+old_video)
+            try:
+                os.remove(conf.video_dir+old_video)
+                logging.debug('removed: %s' % conf.video_dir+old_video)
+            except:
+                logging.error('failed to remove old video file:{}!'.format(
+                    conf.video_dir+old_video))
+
     # uploaded_files =  os.listdir(conf.video_dir+'upload/')
     # for old_video in uploaded_files:
     #     os.remove(conf.video_dir+'upload/'+old_video)
     #     logging.debug('removed upload: %s' 
     #         % conf.video_dir+'upload/'+old_video)
-    remove_all(conf.video_dir+'upload/')
-    remove_all(conf.video_dir+'concats/')
+    try:
+        remove_all(conf.video_dir+'upload/')
+        remove_all(conf.video_dir+'concats/')
+    except:
+        logging.error('failed to remove upload/ or concats/')
+
 
 
 def container_reaper(num_threshold):
@@ -50,15 +68,25 @@ def container_reaper(num_threshold):
                                   conf.account_username,
                                   conf.password,
                                   auth_version=conf.auth_version)
-    container_head = conn.head_container(conf.container_video)
+    try:
+        container_head = conn.head_container(conf.container_video)
+    except:
+        logging.error('failed to head container!')
     logging.debug(container_head)
     if int(container_head['x-container-object-count']) > num_threshold:
         logging.debug('objects num: %s, delete container...' % 
             container_head['x-container-object-count'])
         time.sleep(5)
-        conn.delete_container(conf.container_video)
+        try:
+            conn.delete_container(conf.container_video)
+        except ClientException:
+            logging.error('failed to delete container!')
         time.sleep(5)
-        conn.put_container(conf.container_video)
+        try:
+            conn.put_container(conf.container_video)
+        except ClientException:
+            logging.error('failed to put container!')
+
 
 # videos_reaper(3)
 if __name__ == '__main__':
@@ -74,9 +102,9 @@ if __name__ == '__main__':
     # conn.put_object(test_con, 'file1', file1)
     # conn.head_account()
 
-    container_reaper(10)
-    # while 1:
-    #     time.sleep(60*60)
-    #     logging.debug('reaping videos....')
-    #     videos_reaper(100)
-    #     container_reaper(40)
+    # container_reaper(10)
+    while 1:
+        time.sleep(60*60)
+        logging.debug('reaping videos....')
+        videos_reaper(100)
+        container_reaper(40)
